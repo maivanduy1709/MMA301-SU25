@@ -17,10 +17,14 @@ mongoose
   .catch((error) => console.log(error));
 
 // test api
-server.get("/User", async (req, res) => {
-  const users = await User.find();
-  res.json(users);
-});
+// server.get("/User", async (req, res) => {
+//   const users = await User.find();
+//   res.json(users);
+// });
+
+// dinh tuyen router auth
+const authRoute = require("./routes/authRoute");
+server.use("/api/auth", authRoute);
 
 const PORT = process.env.PORT || 3001;
 const HOST = process.env.HOST || "localhost";
