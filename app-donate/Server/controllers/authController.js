@@ -22,4 +22,27 @@ const Register = async (req, res) => {
   }
 };
 
-module.exports = { Register };
+const Longin = async (req, res) => {
+  const { email, password } = req.body;
+  try {
+    if (!email || !password) {
+      return res.status(400).json({ message: "All fields are required" });
+    }
+
+    const user = await User.findOne({ email });
+
+    if (!user || user.password !== password) {
+      return res
+        .status(401)
+        .json({ message: "email or password is incorrect" });
+    }
+
+    const { password: pw, ...userData } = user._doc;
+
+    res.status(200).json({ message: "Login successfully", user: userData });
+  } catch (error) {
+    res.status(500).json({ message: "Error on server", error });
+  }
+};
+
+module.exports = { Register, Longin };
