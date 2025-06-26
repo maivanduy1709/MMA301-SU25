@@ -22,7 +22,7 @@ const Register = async (req, res) => {
   }
 };
 
-const Longin = async (req, res) => {
+const Login = async (req, res) => {
   const { email, password } = req.body;
   try {
     if (!email || !password) {
@@ -45,4 +45,4 @@ const Longin = async (req, res) => {
   }
 };
 
-module.exports = { Register, Longin };
+module.exports = { Register, Login };
