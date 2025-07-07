@@ -11,7 +11,7 @@ export default function LoginScreen({ navigation }: any) {
     try {
       const data = await login(email, password);
       Alert.alert('✅ Thành công', data.message);
-      navigation.replace('Home');
+      navigation.navigate('Home');
     } catch (err: any) {
       Alert.alert('❌ Lỗi', err.response?.data?.message || 'Lỗi đăng nhập');
     }
