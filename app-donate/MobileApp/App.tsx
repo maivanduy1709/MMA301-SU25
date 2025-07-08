@@ -1,18 +1,28 @@
-import React from 'react';
-import { NavigationContainer } from '@react-navigation/native';
-import { createNativeStackNavigator } from '@react-navigation/native-stack';
-import ListScreen from '../MobileApp/src/screens/ListScreen';
-import AddEditScreen from '../MobileApp/src/screens/AddEditScreen';
+/**
+ * Sample React Native App
+ * https://github.com/facebook/react-native
+ *
+ * @format
+ */
 
-const Stack = createNativeStackNavigator();
+import { NewAppScreen } from '@react-native/new-app-screen';
+import { StatusBar, StyleSheet, useColorScheme, View } from 'react-native';
 
-export default function App() {
+function App() {
+  const isDarkMode = useColorScheme() === 'dark';
+
   return (
-    <NavigationContainer>
-      <Stack.Navigator>
-        <Stack.Screen name="Danh sách" component={ListScreen} />
-        <Stack.Screen name="Thêm / Sửa" component={AddEditScreen} />
-      </Stack.Navigator>
-    </NavigationContainer>
+    <View style={styles.container}>
+      <StatusBar barStyle={isDarkMode ? 'light-content' : 'dark-content'} />
+      <NewAppScreen templateFileName="App.tsx" />
+    </View>
   );
 }
+
+const styles = StyleSheet.create({
+  container: {
+    flex: 1,
+  },
+});
+
+export default App;
