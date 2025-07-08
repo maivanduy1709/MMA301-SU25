@@ -10,7 +10,7 @@ const PersonItem = ({ person, onEdit, onDelete }) => (
     <Text>Status: {person.status}</Text>
     <View style={styles.row}>
       <Button title="Edit" onPress={() => onEdit(person)} />
-      <Button title="Delete" color="blue" onPress={() => onDelete(person._id)} />
+      <Button title="Delete" color="red" onPress={() => onDelete(person._id)} />
     </View>
   </View>
 );
