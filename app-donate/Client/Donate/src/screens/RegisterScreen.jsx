@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { View, Text, TextInput, Button, Alert, StyleSheet } from 'react-native';
 import { register } from '../services/authService';
 
-export default function RegisterScreen({ navigation }: any) {
+export default function RegisterScreen({ navigation }) {
   const [name, setName] = useState('');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
@@ -12,8 +12,8 @@ export default function RegisterScreen({ navigation }: any) {
       const data = await register(name, email, password);
       Alert.alert('✅ Đăng ký thành công', data.message);
       navigation.replace('Login');
-    } catch (err: any) {
-      Alert.alert('❌ Lỗi', err.response?.data?.message || 'Lỗi đăng ký');
+    } catch (err) {
+      Alert.alert('❌ Lỗi', err?.response?.data?.message || 'Lỗi đăng ký');
     }
   };
 
@@ -31,6 +31,8 @@ export default function RegisterScreen({ navigation }: any) {
         placeholder="Email"
         value={email}
         onChangeText={setEmail}
+        keyboardType="email-address"
+        autoCapitalize="none"
       />
       <TextInput
         style={styles.input}

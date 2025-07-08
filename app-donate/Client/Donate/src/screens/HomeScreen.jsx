@@ -6,6 +6,7 @@ import { useNavigation, CommonActions } from '@react-navigation/native';
 export default function HomeScreen() {
   const { user, logout } = useAuth();
   const navigation = useNavigation();
+
   const handleLogout = async () => {
     await logout(); // xóa user khỏi context và AsyncStorage
 
@@ -17,10 +18,11 @@ export default function HomeScreen() {
       }),
     );
   };
+
   return (
     <View style={styles.container}>
       <Text>Xin chào, {user?.email || 'người dùng'}</Text>
-      <Button title="Đăng xuat" onPress={handleLogout} />
+      <Button title="Đăng xuất" onPress={handleLogout} />
     </View>
   );
 }
