@@ -19,3 +19,19 @@ export const forgotPassword = async email => {
   const res = await axios.post(`${API_URL}/auth/forgot-password`, { email });
   return res.data;
 };
+
+export const verifyResetCode = async (email, code) => {
+  const res = await axios.post(`${API_URL}/auth/verify-code`, {
+    email,
+    code,
+  });
+  return res.data;
+};
+
+export const resetPassword = async (email, newPassword) => {
+  const res = await axios.post(`${API_URL}/auth/reset-password`, {
+    email,
+    newPassword,
+  });
+  return res.data;
+};

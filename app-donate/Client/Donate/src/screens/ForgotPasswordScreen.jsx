@@ -9,6 +9,7 @@ export default function ForgotPasswordScreen({ navigation }) {
     try {
       const data = await forgotPassword(email);
       Alert.alert('✅ Thành công', data.message);
+      navigation.navigate('VerifyCode', { email });
     } catch (error) {
       Alert.alert('❌ Lỗi', 'Không thể gửi mã xác nhận');
     }
