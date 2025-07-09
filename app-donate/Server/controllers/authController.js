@@ -26,24 +26,32 @@ const Register = async (req, res) => {
 
 const Login = async (req, res) => {
   const { email, password } = req.body;
+
   try {
     if (!email || !password) {
       return res.status(400).json({ message: "All fields are required" });
     }
 
     const user = await User.findOne({ email });
-
-    if (!user || user.password !== password) {
+    if (!user) {
       return res
         .status(401)
-        .json({ message: "email or password is incorrect" });
+        .json({ message: "Email or password is incorrect" });
+    }
+
+    const isMatch = await bcrypt.compare(password, user.password);
+    if (!isMatch) {
+      return res
+        .status(401)
+        .json({ message: "Email or password is incorrect" });
     }
 
     const { password: pw, ...userData } = user._doc;
-
-    res.status(200).json({ message: "Login successfully", user: userData });
+    return res
+      .status(200)
+      .json({ message: "Login successfully", user: userData });
   } catch (error) {
-    res.status(500).json({ message: "Error on server", error });
+    return res.status(500).json({ message: "Error on server", error });
   }
 };
 const forgotPassword = async (req, res) => {
