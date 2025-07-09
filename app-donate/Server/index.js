@@ -4,6 +4,7 @@ require("dotenv").config();
 require('./routes/supportedPeople');
 
 const User = require("./model/User");
+const donationRoutes = require('./routes/donationRoutes');
 
 const server = express();
 server.use(cors());
@@ -25,6 +26,14 @@ const supportedPeopleRoute = require("./routes/supportedPeople");
 
 server.use("/api/auth", authRoute);
 server.use('/api/supported-people', supportedPeopleRoute)
+server.use('/api', donationRoutes);
+server.get('/', (req, res) => {
+  res.send('Server is running 🚀');
+});
+server.post('/webhook', (req, res) => {
+  console.log('Webhook received:', req.body);
+  res.sendStatus(200);
+});
 
 const PORT = process.env.PORT || 3001;
 const HOST = process.env.HOST || "0.0.0.0"; // đúng chuẩn
