@@ -21,11 +21,14 @@ import {
 } from 'react-native';
 import LinearGradient from 'react-native-linear-gradient';
 import Icon from 'react-native-vector-icons/Ionicons';
+import { useNavigation } from '@react-navigation/native';
+
 
 const { width, height } = Dimensions.get('window');
 
 const LandingPage = () => {
   const [supportedPeople, setSupportedPeople] = useState([]);
+  const navigation = useNavigation();
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
   const [modalVisible, setModalVisible] = useState(false);
@@ -390,6 +393,21 @@ Tham gia ủng hộ tại: https://caplayeuthuong.vn`;
         colors={['#4CAF50', '#2E7D32']}
         style={styles.header}
       >
+        <View style={styles.headerTop}>
+  <Text style={styles.headerTitle}>Cặp lá yêu thương</Text>
+
+  <View style={{ flexDirection: 'row' }}>
+    <TouchableOpacity onPress={() => setShowSearch(!showSearch)} style={{ marginRight: 10 }}>
+      <Icon name="search" size={24} color="#FFF" />
+    </TouchableOpacity>
+
+    {/* ➕ Thêm nút này */}
+    <TouchableOpacity onPress={() => navigation.navigate('Giao dịch')}>
+      <Icon name="list-circle" size={26} color="#FFF" />
+    </TouchableOpacity>
+  </View>
+</View>
+
         <View style={styles.headerContent}>
           <View style={styles.headerTop}>
             <Text style={styles.headerTitle}>Cặp lá yêu thương</Text>

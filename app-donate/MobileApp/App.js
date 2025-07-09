@@ -5,17 +5,19 @@ import HomeScreen from './screens/HomeScreen';
 import AddPersonScreen from './screens/AddPersonScreen';
 import EditPersonScreen from './screens/EditPersonScreen';
 import LandingPage from './components/LandingPage';
+import TransactionHistory from './components/TransactionHistory';
 
 const Stack = createNativeStackNavigator();
 
 export default function App() {
   return (
-    <NavigationContainer>
+    <NavigationContainer> 
       <Stack.Navigator initialRouteName="Landing">
   <Stack.Screen name="Landing" component={LandingPage} />
   <Stack.Screen name="Home" component={HomeScreen} />
   <Stack.Screen name="Add" component={AddPersonScreen} />
   <Stack.Screen name="Edit" component={EditPersonScreen} />
+  <Stack.Screen name="Giao dịch" component={TransactionHistory} />
 </Stack.Navigator>
 
     </NavigationContainer>
