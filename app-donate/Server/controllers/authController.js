@@ -13,16 +13,19 @@ const Register = async (req, res) => {
       return res.status(400).json({ message: "User already exists" });
     }
 
-    // Tạo user mới
-    const newUser = await User.create({ name, email, password });
+    // 🔐 Mã hóa mật khẩu
+    const hashedPassword = await bcrypt.hash(password, 10);
+
+    // Tạo user mới với mật khẩu đã mã hóa
+    const newUser = await User.create({ name, email, password: hashedPassword });
+
     const { password: pw, ...userData } = newUser._doc;
-    res
-      .status(201)
-      .json({ message: "User registered successfully", user: userData });
+    res.status(201).json({ message: "User registered successfully", user: userData });
   } catch (error) {
     res.status(500).json({ message: error.message });
   }
 };
+
 
 const Login = async (req, res) => {
   const { email, password } = req.body;
