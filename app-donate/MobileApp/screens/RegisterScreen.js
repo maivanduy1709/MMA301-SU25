@@ -83,6 +83,12 @@ export default function RegisterScreen({ navigation }) {
           contentContainerStyle={styles.scrollContainer}
           showsVerticalScrollIndicator={false}
         >
+           <TouchableOpacity 
+            style={styles.closeButton}
+            onPress={() => navigation.navigate('Welcome')} // hoặc navigation.goBack()
+          >
+            <Icon name="close-outline" size={28} color="#FFFFFF" />
+          </TouchableOpacity>
           {/* Header Section */}
           <View style={styles.header}>
             {/* Logo */}
@@ -391,4 +397,12 @@ const styles = StyleSheet.create({
     fontSize: 15,
     fontWeight: 'bold',
   },
+  closeButton: {
+  position: 'absolute',
+  top: 40, // hoặc phù hợp với khoảng cách status bar
+  right: 24, // đưa nút sang phải
+  zIndex: 10,
+  padding: 8,
+},
+
 });

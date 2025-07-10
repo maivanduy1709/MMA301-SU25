@@ -77,6 +77,12 @@ export default function LoginScreen({ navigation }) {
           contentContainerStyle={styles.scrollContainer}
           showsVerticalScrollIndicator={false}
         >
+          <TouchableOpacity 
+  style={styles.closeButton}
+  onPress={() => navigation.navigate('Welcome')} // hoặc navigation.goBack()
+>
+  <Icon name="close-outline" size={28} color="#FFFFFF" />
+</TouchableOpacity>
           {/* Header Section */}
           <View style={styles.header}>
             {/* Logo */}
@@ -96,6 +102,8 @@ export default function LoginScreen({ navigation }) {
             <Text style={styles.title}>Đăng Nhập</Text>
             <Text style={styles.subtitle}>Chào mừng bạn trở lại!</Text>
           </View>
+          
+
 
           {/* Form Section */}
           <View style={styles.formContainer}>
@@ -326,6 +334,14 @@ const styles = StyleSheet.create({
     elevation: 2,
     shadowOpacity: 0.1,
   },
+  closeButton: {
+  position: 'absolute',
+  top: 40, // hoặc phù hợp với khoảng cách status bar
+  right: 24, // đưa nút sang phải
+  zIndex: 10,
+  padding: 8,
+},
+
   loginButtonGradient: {
     paddingVertical: 16,
     borderRadius: 16,
