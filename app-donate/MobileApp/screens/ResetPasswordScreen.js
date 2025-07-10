@@ -12,7 +12,7 @@ export default function ResetPasswordScreen({ route, navigation }) {
     }
 
     if (newPassword !== confirmPassword) {
-      return Alert.alert(' Lỗi', 'Mật khẩu không trùng khớp');
+      return Alert.alert(' Lỗi', 'Mật khẩu không trùng khớ');
     }
 
     try {
