@@ -46,6 +46,10 @@ export default function LoginScreen({ navigation }) {
       
       Alert.alert('✅ Thành công', 'Đăng nhập thành công!');
       // navigation.navigate('Home');
+      navigation.reset({
+  index: 0,
+  routes: [{ name: 'Home' }],
+});
     } catch (err) {
       Alert.alert('❌ Lỗi', err?.response?.data?.message || 'Đăng nhập thất bại!');
     } finally {
