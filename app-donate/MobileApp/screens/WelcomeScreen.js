@@ -142,7 +142,7 @@ export default function WelcomeScreen({ navigation }) {
         {/* Skip Button */}
         <TouchableOpacity 
           style={styles.skipButton}
-          onPress={() => navigation.navigate('Login')}
+          onPress={() => navigation.navigate('Home')}
         >
           <Text style={styles.skipText}>Bỏ qua →</Text>
         </TouchableOpacity>
@@ -286,7 +286,7 @@ const styles = StyleSheet.create({
   },
   skipText: {
     color: '#FFFFFF',
-    fontSize: 14,
+    fontSize: 16,
     fontWeight: '500',
   },
   logoSection: {

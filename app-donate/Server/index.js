@@ -7,7 +7,6 @@ const transactionRoutes = require('./routes/transactionRoutes');
 
 require("dotenv").config();
 
-// Khởi tạo server
 const server = express();
 server.use(cors());
 server.use(express.json());
@@ -25,26 +24,39 @@ mongoose
 const authRoute = require("./routes/authRoute");
 const supportedPeopleRoute = require("./routes/supportedPeople");
 const donationRoutes = require("./routes/donationRoutes");
+const campaignRoutes = require("./routes/campaigns");
+const categoryRoutes = require("./routes/categories");
+const eventRoutes = require("./routes/events");
+const userRoutes = require("./routes/users");
+const tagRoutes = require("./routes/tags");
+const dashboardRoutes = require('./routes/dashboard');
+const organizationRoutes = require('./routes/organizations');
 
 // Sử dụng routes
 server.use("/api/auth", authRoute);
 server.use("/api/supported-people", supportedPeopleRoute);
 server.use("/api", donationRoutes);
-server.use("/api", transactionRoutes); // Gắn vào /api/transactions
+server.use("/api", transactionRoutes); // Giao dịch
 
+// Thêm đủ 5 nhóm API từ hệ thống thiện nguyện
+server.use("/api/campaigns", campaignRoutes);
+server.use("/api/categories", categoryRoutes);
+server.use("/api/events", eventRoutes);
+server.use("/api/users", userRoutes);
+server.use("/api/tags", tagRoutes);
+server.use('/api/dashboard', dashboardRoutes);
+server.use('/api/organizations', organizationRoutes);
 // Mặc định root
 server.get("/", (req, res) => {
   res.send("Server is running 🚀");
 });
 
-
+// Webhook xử lý thanh toán
 server.post("/hooks/sepay-payment", async (req, res) => {
   const data = req.body;
-
   console.log("📥 Nhận Webhook:", data);
 
   try {
-    // Kiểm tra trùng mã giao dịch
     const exists = await Transaction.findOne({ "raw.referenceCode": data.referenceCode });
     if (exists) {
       console.log("⚠️ Trùng mã giao dịch, bỏ qua:", data.referenceCode);
@@ -61,7 +73,6 @@ server.post("/hooks/sepay-payment", async (req, res) => {
 
     await transaction.save();
     console.log("✅ Giao dịch đã được lưu");
-
     res.status(200).send({ status: "Đã lưu giao dịch" });
   } catch (err) {
     console.error("❌ Lỗi khi lưu giao dịch:", err);
@@ -69,8 +80,7 @@ server.post("/hooks/sepay-payment", async (req, res) => {
   }
 });
 
-
-// Lắng nghe server
+// Khởi động server
 const PORT = process.env.PORT || 3001;
 const HOST = process.env.HOST || "0.0.0.0";
 
