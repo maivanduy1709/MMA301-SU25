@@ -770,7 +770,11 @@ const updatedStyles = StyleSheet.create({
           icon="🔍"
           label="Khám phá"
           isActive={activeTab === 'explore'}
-          onPress={() => setActiveTab('explore')}
+          onPress={() => {
+    setActiveTab('explore');
+    navigation.navigate('ExplorePage');
+  }}
+          
         />
       </View>
     </SafeAreaView>

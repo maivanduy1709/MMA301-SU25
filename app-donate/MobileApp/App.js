@@ -14,6 +14,7 @@ import WelcomeScreen from './screens/WelcomeScreen';
 import CampaignDetailScreen from './screens/CampaignDetailScreen';
 import SupportPage from './screens/SupportPage';
 import NewsFeed from './screens/NewsFeed';
+import ExplorePage from './screens/ExplorePage';
 
 
 const Stack = createNativeStackNavigator();
@@ -108,6 +109,7 @@ function MainNavigation() {
         <Stack.Screen name="CampaignDetail" component={CampaignDetailScreen} />
         <Stack.Screen name="SupportPage" component={SupportPage} />
           <Stack.Screen name="NewsFeed" component={NewsFeed} />
+       <Stack.Screen name="ExplorePage" component={ExplorePage} />
 
       </Stack.Navigator>
     </NavigationContainer>

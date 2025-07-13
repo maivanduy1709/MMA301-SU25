@@ -21,7 +21,10 @@ const CampaignSchema = new mongoose.Schema({
   organization_id: mongoose.Schema.Types.ObjectId,
   created_at: { type: Date, default: Date.now },
   updated_at: { type: Date, default: Date.now },
-  tags: [String]
+  tags: [String],
+    location: String,
+  lat: Number,             // ➕ thêm kinh độ
+  lng: Number, 
 
 });
 

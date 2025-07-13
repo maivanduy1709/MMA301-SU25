@@ -12,11 +12,12 @@ import {
   Dimensions,
   StatusBar,
   Clipboard,
-  Share, // Thêm import Share
+  Share,
 } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
 import { v4 as uuidv4 } from 'uuid';
 import axios from 'axios';
+import { Buffer } from 'buffer';
 
 const { width } = Dimensions.get('window');
 
@@ -25,6 +26,8 @@ const CampaignDetailScreen = ({ route }) => {
   const campaignId = campaign?._id;
   const navigation = useNavigation();
   const [shareModalVisible, setShareModalVisible] = useState(false);
+  const [qrBase64, setQrBase64] = useState(null);
+
 
   if (!campaignId) {
     console.warn("⚠️ Không tìm thấy campaignId từ route.params");
@@ -36,14 +39,17 @@ const CampaignDetailScreen = ({ route }) => {
     return null;
   }
 
-  // State management - FIX: Dùng tên biến nhất quán
+  // State management
   const [campaignData, setCampaignData] = useState(null);
   const [loading, setLoading] = useState(true);
   const [donationModalVisible, setDonationModalVisible] = useState(false);
   const [qrVisible, setQrVisible] = useState(false);
   const [donationId, setDonationId] = useState(null);
+  const [isGeneratingQR, setIsGeneratingQR] = useState(false);
+  const [qrLoading, setQrLoading] = useState(false);
+  const [qrError, setQrError] = useState(false);
 
- const API_BASE_URL = 'http://10.0.2.2:3001/api'; ;
+  const API_BASE_URL = 'http://10.0.2.2:3001/api';
 
   useEffect(() => {
     fetchCampaignFromDatabase();
@@ -71,7 +77,7 @@ const CampaignDetailScreen = ({ route }) => {
     }
   };
 
-  // Utility functions - FIX: Sử dụng campaignData nhất quán
+  // Utility functions
   const formatCurrency = (amount) => {
     if (!amount) return '0 đ';
     return new Intl.NumberFormat('vi-VN', {
@@ -106,26 +112,91 @@ const CampaignDetailScreen = ({ route }) => {
     Clipboard.setString(text);
     Alert.alert('Đã sao chép', `${label} đã được sao chép vào clipboard`);
   };
+  
 
+  // Hàm getBankContent được sửa lại - giữ lại dấu tiếng Việt
   const getBankContent = () => {
-    if (!campaignData) return '';
-    const campaignCode = campaignData._id.slice(-8).toUpperCase();
-    return `${campaignData.title.substring(0, 20)} ${campaignCode}`;
+    if (!campaignData) return 'Ung ho CLYT';
+    
+    try {
+      const campaignCode = campaignData._id ? campaignData._id.slice(-8).toUpperCase() : 'CLYT';
+      const title = campaignData.title ? campaignData.title.substring(0, 30) : 'Ung ho';
+      
+      // Chỉ loại bỏ các ký tự có thể gây lỗi URL, giữ lại dấu tiếng Việt
+      const cleanTitle = title.replace(/[<>\"'&]/g, '').trim();
+      
+      return `${cleanTitle} ${campaignCode}`;
+    } catch (error) {
+      console.error('❌ Error in getBankContent:', error);
+      return 'Ung ho CLYT';
+    }
   };
 
-  // FIX: Implement chức năng chia sẻ thật
- const handleShare = () => {
-  if (!campaignData) {
-    Alert.alert('Lỗi', 'Không có dữ liệu chiến dịch để chia sẻ');
-    return;
+  // Hàm generateQRUrl được sửa lại
+  const generateQRUrl = (desContent) => {
+    const acc = '686829078888';
+    const bank = 'MBBank';
+    
+    // Đảm bảo desContent không null/undefined
+    let content = desContent || 'Ung ho CLYT';
+    
+    // Chỉ loại bỏ các ký tự có thể gây lỗi URL, giữ lại dấu tiếng Việt
+    content = content.replace(/[<>\"'&]/g, '').trim();
+    
+    // Giới hạn độ dài để tránh URL quá dài
+    if (content.length > 50) {
+      content = content.substring(0, 50);
+    }
+    
+    // Encode URL đúng cách cho tiếng Việt
+    const encodedDes = encodeURIComponent(content);
+    const qrUrl = `https://qr.sepay.vn/img?acc=${acc}&bank=${bank}&des=${encodedDes}&template=compact&download=false`;
+    
+    console.log('🔗 QR URL:', qrUrl);
+    console.log('📝 Content:', content);
+    
+    return qrUrl;
+  };
+const loadQrAsBase64 = async () => {
+  try {
+    setQrLoading(true);
+    const qrUrl = generateQRUrl(getBankContent());
+    const response = await axios.get(qrUrl, { responseType: 'arraybuffer' });
+    const base64 = Buffer.from(response.data, 'binary').toString('base64');
+    setQrBase64(`data:image/png;base64,${base64}`);
+    setQrLoading(false);
+    setQrError(false);
+  } catch (error) {
+    console.error('❌ QR tải lỗi:', error);
+    setQrLoading(false);
+    setQrError(true);
   }
-
-  const shareUrl = `https://caplayeuthuong.vn/campaign/${campaignData._id}`;
-  Clipboard.setString(shareUrl); // Sao chép vào clipboard
-  Alert.alert('📋 Đã sao chép', 'Link chiến dịch đã được sao chép:\n\n' + shareUrl);
 };
 
-  // Donation handlers - FIX: Thêm validation
+  const createDonationId = () => {
+    return uuidv4();
+  };
+
+  const copyDonationId = () => {
+    if (donationId) {
+      Clipboard.setString(donationId);
+      Alert.alert('📋 Đã sao chép', `Mã quyên góp: ${donationId}`);
+    }
+  };
+
+  // Implement chức năng chia sẻ
+  const handleShare = () => {
+    if (!campaignData) {
+      Alert.alert('Lỗi', 'Không có dữ liệu chiến dịch để chia sẻ');
+      return;
+    }
+
+    const shareUrl = `https://caplayeuthuong.vn/campaign/${campaignData._id}`;
+    Clipboard.setString(shareUrl);
+    Alert.alert('📋 Đã sao chép', 'Link chiến dịch đã được sao chép:\n\n' + shareUrl);
+  };
+
+  // Donation handlers
   const handleDonate = () => {
     if (!campaignData) {
       Alert.alert('Lỗi', 'Không có dữ liệu chiến dịch');
@@ -134,13 +205,16 @@ const CampaignDetailScreen = ({ route }) => {
     setDonationModalVisible(true);
   };
 
+  // Cập nhật hàm tạo QR
   const handleDonateWithQR = async () => {
     if (!campaignData) {
       Alert.alert('Lỗi', 'Không có dữ liệu chiến dịch');
       return;
     }
 
-    const newId = uuidv4();
+    setIsGeneratingQR(true);
+    
+    const newId = createDonationId();
     setDonationId(newId);
 
     try {
@@ -161,16 +235,19 @@ const CampaignDetailScreen = ({ route }) => {
 
       setDonationModalVisible(false);
       setQrVisible(true);
+      setIsGeneratingQR(false);
+      setQrLoading(true);
+      setQrError(false);
+      
+      // Sao chép donation ID vào clipboard
+      Clipboard.setString(newId);
+      Alert.alert('📋 Đã tạo mã QR', `Mã quyên góp: ${newId}\n(Đã sao chép vào clipboard)`);
+      
     } catch (error) {
       console.error('Donation initiation error:', error);
       Alert.alert('Lỗi', 'Không thể tạo mã ủng hộ. Vui lòng thử lại.');
+      setIsGeneratingQR(false);
     }
-  };
-
-  const generateQRUrl = (id) => {
-    const acc = '686829078888';
-    const bank = 'MBBank';
-    return `https://qr.sepay.vn/img?acc=${acc}&bank=${bank}&des=${id}&template=compact&download=false`;
   };
 
   // Check donation status polling
@@ -213,7 +290,7 @@ const CampaignDetailScreen = ({ route }) => {
     );
   }
 
-  // Error state - FIX: Kiểm tra campaignData thay vì campaign
+  // Error state
   if (!campaignData) {
     return (
       <View style={styles.errorContainer}>
@@ -348,9 +425,9 @@ const CampaignDetailScreen = ({ route }) => {
 
       {/* Bottom Action Buttons */}
       <View style={styles.bottomActions}>
-     <TouchableOpacity style={styles.shareButton} onPress={handleShare}>
-  <Text style={styles.shareButtonText}>📋 Sao chép link</Text>
-</TouchableOpacity>
+        <TouchableOpacity style={styles.shareButton} onPress={handleShare}>
+          <Text style={styles.shareButtonText}>📋 Sao chép link</Text>
+        </TouchableOpacity>
         <TouchableOpacity style={styles.donateButton} onPress={handleDonate}>
           <Text style={styles.donateButtonText}>Quyên góp ngay 💝</Text>
         </TouchableOpacity>
@@ -385,16 +462,16 @@ const CampaignDetailScreen = ({ route }) => {
                   <Text style={styles.bankInfoLabel}>Số tài khoản:</Text>
                   <TouchableOpacity
                     onPress={() =>
-                      copyToClipboard('1000001001242424', 'Số tài khoản')
+                      copyToClipboard('686829078888', 'Số tài khoản')
                     }
                   >
-                    <Text style={styles.bankInfoValue}>1000001001242424 📋</Text>
+                    <Text style={styles.bankInfoValue}>686829078888 📋</Text>
                   </TouchableOpacity>
                 </View>
 
                 <View style={styles.bankInfoRow}>
                   <Text style={styles.bankInfoLabel}>Ngân hàng:</Text>
-                  <Text style={styles.bankInfoValue}>Chính sách xã hội (VBSP)</Text>
+                  <Text style={styles.bankInfoValue}>MBBank</Text>
                 </View>
 
                 <View style={styles.bankInfoRow}>
@@ -410,9 +487,10 @@ const CampaignDetailScreen = ({ route }) => {
                   Quý vị vui lòng chọn chuyển tiền ở chế độ thường.
                 </Text>
               </View>
+              
               <Text style={{ color: '#2980b9', marginTop: 10 }} selectable>
-  https://caplayeuthuong.vn/campaign/{campaignData._id}
-</Text>
+                https://caplayeuthuong.vn/campaign/{campaignData._id}
+              </Text>
 
               {/* Content Options */}
               <View style={styles.contentSection}>
@@ -452,8 +530,13 @@ const CampaignDetailScreen = ({ route }) => {
               <TouchableOpacity 
                 style={styles.qrButton} 
                 onPress={handleDonateWithQR}
+                disabled={isGeneratingQR}
               >
-                <Text style={styles.qrButtonText}>🔲 Tạo mã QR để ủng hộ</Text>
+                {isGeneratingQR ? (
+                  <ActivityIndicator size="small" color="#fff" />
+                ) : (
+                  <Text style={styles.qrButtonText}>🔲 Tạo mã QR để ủng hộ</Text>
+                )}
               </TouchableOpacity>
 
               {/* Suggested Amounts */}
@@ -480,20 +563,103 @@ const CampaignDetailScreen = ({ route }) => {
         </View>
       </Modal>
 
-      {/* QR Modal */}
+      {/* QR Modal - Được sửa lại với loading state tốt hơn */}
       <Modal visible={qrVisible} transparent={true} animationType="slide">
         <View style={styles.modalOverlay}>
           <View style={styles.qrModalContent}>
             <Text style={styles.qrTitle}>Quét mã QR để ủng hộ</Text>
-            <Image
-              source={{ uri: generateQRUrl(donationId) }}
-              style={styles.qrImage}
-            />
-            <Text style={styles.qrText}>Nội dung chuyển khoản: {donationId}</Text>
-            <Text style={styles.qrSubText}>Đang chờ xác nhận thanh toán...</Text>
-            <ActivityIndicator size="small" color="#e74c3c" style={{marginTop: 10}} />
+            
+            <View style={styles.qrImageContainer}>
+              <Image
+                source={{ uri: generateQRUrl(getBankContent()) }}
+                style={styles.qrImage}
+                resizeMode="contain"
+                onLoadStart={() => setQrLoading(true)}
+                onLoad={() => {
+                  setQrLoading(false);
+                  setQrError(false);
+                }}
+                onError={() => {
+                  setQrLoading(false);
+                  setQrError(true);
+                }}
+              />
+              
+              {qrLoading && (
+                <View style={styles.qrLoadingOverlay}>
+                  <ActivityIndicator size="large" color="#e74c3c" />
+                  <Text style={styles.qrLoadingText}>Đang tải mã QR...</Text>
+                </View>
+              )}
+              
+              {qrError && (
+                <View style={styles.qrErrorOverlay}>
+                  <Text style={styles.qrErrorIcon}>❌</Text>
+                  <Text style={styles.qrErrorText}>Không thể tải mã QR</Text>
+                  <TouchableOpacity 
+                    style={styles.retryQrButton}
+                    onPress={() => {
+                      setQrError(false);
+                      setQrLoading(true);
+                      // Force reload image
+                      const img = new Image();
+                      img.src = generateQRUrl(getBankContent());
+                    }}
+                  >
+                    <Text style={styles.retryQrButtonText}>Thử lại</Text>
+                  </TouchableOpacity>
+                </View>
+              )}
+            </View>
+
+            {/* Hiển thị nội dung chuyển khoản */}
+            <View style={styles.bankContentInfo}>
+              <Text style={styles.bankContentLabel}>Nội dung chuyển khoản:</Text>
+              <TouchableOpacity 
+                style={styles.bankContentContainer}
+                onPress={() => copyToClipboard(getBankContent(), 'Nội dung chuyển khoản')}
+              >
+                <Text style={styles.bankContentText}>{getBankContent()}</Text>
+                <Text style={styles.copyIcon}>📋</Text>
+              </TouchableOpacity>
+            </View>
+
+            {/* Donation Info */}
+            <View style={styles.donationInfo}>
+              <Text style={styles.donationLabel}>Mã quyên góp:</Text>
+              <TouchableOpacity 
+                style={styles.donationIdContainer}
+                onPress={copyDonationId}
+              >
+                <Text style={styles.donationId}>{donationId}</Text>
+                <Text style={styles.copyIcon}>📋</Text>
+              </TouchableOpacity>
+            </View>
+
+            {/* Status */}
+            <View style={styles.statusContainer}>
+              <Text style={styles.qrSubText}>Đang chờ xác nhận thanh toán...</Text>
+              <ActivityIndicator size="small" color="#e74c3c" style={{marginTop: 10}} />
+            </View>
+
+            {/* Instructions */}
+            <View style={styles.instructionContainer}>
+              <Text style={styles.instructionTitle}>📱 Hướng dẫn:</Text>
+              <Text style={styles.instructionText}>
+                1. Mở ứng dụng Mobile Banking{'\n'}
+                2. Quét mã QR hoặc nhập thông tin chuyển khoản{'\n'}
+                3. Nhập số tiền bạn muốn ủng hộ{'\n'}
+                4. Xác nhận giao dịch
+              </Text>
+            </View>
+
             <TouchableOpacity 
-              onPress={() => setQrVisible(false)} 
+              onPress={() => {
+                setQrVisible(false);
+                setDonationId(null);
+                setQrLoading(false);
+                setQrError(false);
+              }}
               style={styles.qrCloseButton}
             >
               <Text style={styles.qrCloseButtonText}>Đóng</Text>
@@ -608,6 +774,7 @@ const styles = StyleSheet.create({
     borderTopLeftRadius: 20,
     borderTopRightRadius: 20,
   },
+ 
   title: {
     fontSize: 24,
     fontWeight: 'bold',
@@ -639,6 +806,7 @@ const styles = StyleSheet.create({
     color: '#27ae60',
     fontWeight: '600',
   },
+
   progressSection: {
     marginBottom: 20,
   },
@@ -749,6 +917,7 @@ const styles = StyleSheet.create({
     marginRight: 10,
     alignItems: 'center',
   },
+  
   shareButtonText: {
     color: '#fff',
     fontSize: 16,
