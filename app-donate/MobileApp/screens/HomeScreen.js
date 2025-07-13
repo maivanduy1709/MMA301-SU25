@@ -26,6 +26,8 @@ const CharityHomepage = () => {
   const [stats, setStats] = useState({});
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+  const navigation = useNavigation();
+
 
   // Cấu hình API base URL - thay đổi theo server thật của bạn
   const API_BASE_URL = 'http://10.0.2.2:3001/api'; // Thay bằng URL thật
@@ -749,13 +751,20 @@ const updatedStyles = StyleSheet.create({
           icon="👥"
           label="Ủng hộ"
           isActive={activeTab === 'support'}
-          onPress={() => setActiveTab('support')}
+    onPress={() => {
+    setActiveTab('support');
+    navigation.navigate('SupportPage');
+  }}
+          
         />
         <TabButton
           icon="💬"
           label="Bảng tin"
           isActive={activeTab === 'news'}
-          onPress={() => setActiveTab('news')}
+          onPress={() => {
+    setActiveTab('news');
+    navigation.navigate('NewsFeed');
+  }}
         />
         <TabButton
           icon="🔍"

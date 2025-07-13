@@ -31,6 +31,7 @@ const userRoutes = require("./routes/users");
 const tagRoutes = require("./routes/tags");
 const dashboardRoutes = require('./routes/dashboard');
 const organizationRoutes = require('./routes/organizations');
+const feedRoutes = require('./routes/feed');
 
 // Sử dụng routes
 server.use("/api/auth", authRoute);
@@ -46,6 +47,7 @@ server.use("/api/users", userRoutes);
 server.use("/api/tags", tagRoutes);
 server.use('/api/dashboard', dashboardRoutes);
 server.use('/api/organizations', organizationRoutes);
+server.use('/api/feed', feedRoutes);
 // Mặc định root
 server.get("/", (req, res) => {
   res.send("Server is running 🚀");

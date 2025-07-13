@@ -20,7 +20,9 @@ const CampaignSchema = new mongoose.Schema({
   status: { type: String, enum: ['active', 'completed', 'paused'] },
   organization_id: mongoose.Schema.Types.ObjectId,
   created_at: { type: Date, default: Date.now },
-  updated_at: { type: Date, default: Date.now }
+  updated_at: { type: Date, default: Date.now },
+  tags: [String]
+
 });
 
 module.exports = mongoose.model('Campaign', CampaignSchema);

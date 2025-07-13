@@ -12,6 +12,8 @@ import VerifyCodeScreen from './screens/VerifyCodeScreen';
 import ResetPasswordScreen from './screens/ResetPasswordScreen';
 import WelcomeScreen from './screens/WelcomeScreen';
 import CampaignDetailScreen from './screens/CampaignDetailScreen';
+import SupportPage from './screens/SupportPage';
+import NewsFeed from './screens/NewsFeed';
 
 
 const Stack = createNativeStackNavigator();
@@ -104,6 +106,9 @@ function MainNavigation() {
         <Stack.Screen name="ResetPassword" component={ResetPasswordScreen} />
         <Stack.Screen name="Home" component={HomeScreen} />
         <Stack.Screen name="CampaignDetail" component={CampaignDetailScreen} />
+        <Stack.Screen name="SupportPage" component={SupportPage} />
+          <Stack.Screen name="NewsFeed" component={NewsFeed} />
+
       </Stack.Navigator>
     </NavigationContainer>
   );

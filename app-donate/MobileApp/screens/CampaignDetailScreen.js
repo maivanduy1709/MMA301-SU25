@@ -12,6 +12,7 @@ import {
   Dimensions,
   StatusBar,
   Clipboard,
+  Share, // Thêm import Share
 } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
 import { v4 as uuidv4 } from 'uuid';
@@ -23,6 +24,7 @@ const CampaignDetailScreen = ({ route }) => {
   const { campaign } = route.params;
   const campaignId = campaign?._id;
   const navigation = useNavigation();
+  const [shareModalVisible, setShareModalVisible] = useState(false);
 
   if (!campaignId) {
     console.warn("⚠️ Không tìm thấy campaignId từ route.params");
@@ -34,14 +36,14 @@ const CampaignDetailScreen = ({ route }) => {
     return null;
   }
 
-  // State management
-  const [campaignData, setCampaign] = useState(null); // đổi tên nếu muốn rõ ràng hơn
+  // State management - FIX: Dùng tên biến nhất quán
+  const [campaignData, setCampaignData] = useState(null);
   const [loading, setLoading] = useState(true);
   const [donationModalVisible, setDonationModalVisible] = useState(false);
   const [qrVisible, setQrVisible] = useState(false);
   const [donationId, setDonationId] = useState(null);
 
-  const API_BASE_URL = 'http://192.168.0.107:3001/api';
+ const API_BASE_URL = 'http://10.0.2.2:3001/api'; ;
 
   useEffect(() => {
     fetchCampaignFromDatabase();
@@ -53,7 +55,7 @@ const CampaignDetailScreen = ({ route }) => {
       console.log(`📡 Requesting: ${API_BASE_URL}/campaigns/${campaignId}`);
       const response = await axios.get(`${API_BASE_URL}/campaigns/${campaignId}`);
       console.log("✅ Data:", response.data);
-      setCampaign(response.data);
+      setCampaignData(response.data);
     } catch (error) {
       console.error("❌ Axios error:", error.response?.data || error.message);
       Alert.alert(
@@ -69,9 +71,7 @@ const CampaignDetailScreen = ({ route }) => {
     }
   };
 
-
-
-  // Utility functions
+  // Utility functions - FIX: Sử dụng campaignData nhất quán
   const formatCurrency = (amount) => {
     if (!amount) return '0 đ';
     return new Intl.NumberFormat('vi-VN', {
@@ -81,13 +81,13 @@ const CampaignDetailScreen = ({ route }) => {
   };
 
   const getProgressPercentage = () => {
-    if (!campaign) return 0;
-    return Math.min((campaign.current_amount / campaign.goal_amount) * 100, 100);
+    if (!campaignData) return 0;
+    return Math.min((campaignData.current_amount / campaignData.goal_amount) * 100, 100);
   };
 
   const getDaysRemaining = () => {
-    if (!campaign) return 0;
-    const endDate = new Date(campaign.end_date);
+    if (!campaignData) return 0;
+    const endDate = new Date(campaignData.end_date);
     const today = new Date();
     const diffTime = endDate.getTime() - today.getTime();
     const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
@@ -108,35 +108,61 @@ const CampaignDetailScreen = ({ route }) => {
   };
 
   const getBankContent = () => {
-    if (!campaign) return '';
-    const campaignCode = campaign._id.slice(-8).toUpperCase();
-    return `${campaign.title.substring(0, 20)} ${campaignCode}`;
+    if (!campaignData) return '';
+    const campaignCode = campaignData._id.slice(-8).toUpperCase();
+    return `${campaignData.title.substring(0, 20)} ${campaignCode}`;
   };
 
-  // Donation handlers
+  // FIX: Implement chức năng chia sẻ thật
+ const handleShare = () => {
+  if (!campaignData) {
+    Alert.alert('Lỗi', 'Không có dữ liệu chiến dịch để chia sẻ');
+    return;
+  }
+
+  const shareUrl = `https://caplayeuthuong.vn/campaign/${campaignData._id}`;
+  Clipboard.setString(shareUrl); // Sao chép vào clipboard
+  Alert.alert('📋 Đã sao chép', 'Link chiến dịch đã được sao chép:\n\n' + shareUrl);
+};
+
+  // Donation handlers - FIX: Thêm validation
   const handleDonate = () => {
+    if (!campaignData) {
+      Alert.alert('Lỗi', 'Không có dữ liệu chiến dịch');
+      return;
+    }
     setDonationModalVisible(true);
   };
 
   const handleDonateWithQR = async () => {
+    if (!campaignData) {
+      Alert.alert('Lỗi', 'Không có dữ liệu chiến dịch');
+      return;
+    }
+
     const newId = uuidv4();
     setDonationId(newId);
 
     try {
-      await fetch(`${API_BASE_URL}/initiate-donation`, {
+      const response = await fetch(`${API_BASE_URL}/initiate-donation`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           donationId: newId,
-          campaignId: campaign._id,
-          amount: campaign.goal_amount,
+          campaignId: campaignData._id,
+          amount: campaignData.goal_amount,
           createdAt: new Date(),
         }),
       });
 
+      if (!response.ok) {
+        throw new Error('Network response was not ok');
+      }
+
       setDonationModalVisible(false);
       setQrVisible(true);
     } catch (error) {
+      console.error('Donation initiation error:', error);
       Alert.alert('Lỗi', 'Không thể tạo mã ủng hộ. Vui lòng thử lại.');
     }
   };
@@ -174,12 +200,6 @@ const CampaignDetailScreen = ({ route }) => {
     return () => clearInterval(interval);
   }, [donationId, qrVisible]);
 
-  const handleShare = () => {
-    Alert.alert('Chia sẻ', 'Chức năng chia sẻ đang được phát triển.', [
-      { text: 'OK' },
-    ]);
-  };
-
   // Loading state
   if (loading) {
     return (
@@ -193,8 +213,8 @@ const CampaignDetailScreen = ({ route }) => {
     );
   }
 
-  // Error state
-  if (!campaign) {
+  // Error state - FIX: Kiểm tra campaignData thay vì campaign
+  if (!campaignData) {
     return (
       <View style={styles.errorContainer}>
         <Text style={styles.errorIcon}>😞</Text>
@@ -236,20 +256,20 @@ const CampaignDetailScreen = ({ route }) => {
 
         {/* Main Image */}
         <Image 
-          source={{ uri: campaign.image || 'https://via.placeholder.com/400x200' }} 
+          source={{ uri: campaignData.image || 'https://via.placeholder.com/400x200' }} 
           style={styles.mainImage} 
         />
 
         {/* Campaign Info */}
         <View style={styles.infoContainer}>
-          <Text style={styles.title}>{campaign.title}</Text>
-          <Text style={styles.hashtag}>{campaign.hashtag || '#CặpLáYêuThương'}</Text>
-          <Text style={styles.address}>📍 {campaign.address}</Text>
+          <Text style={styles.title}>{campaignData.title}</Text>
+          <Text style={styles.hashtag}>{campaignData.hashtag || '#CặpLáYêuThương'}</Text>
+          <Text style={styles.address}>📍 {campaignData.address}</Text>
 
           {/* Database Info Badge */}
           <View style={styles.dbBadge}>
             <Text style={styles.dbBadgeText}>
-              🗄️ Từ database: {campaign._id}
+              🗄️ Từ database: {campaignData._id}
             </Text>
           </View>
 
@@ -272,15 +292,15 @@ const CampaignDetailScreen = ({ route }) => {
           <View style={styles.statsSection}>
             <View style={styles.statItem}>
               <Text style={styles.statLabel}>Đã quyên góp:</Text>
-              <Text style={styles.statValue}>{formatCurrency(campaign.current_amount)}</Text>
+              <Text style={styles.statValue}>{formatCurrency(campaignData.current_amount)}</Text>
             </View>
             <View style={styles.statItem}>
               <Text style={styles.statLabel}>Mục tiêu:</Text>
-              <Text style={styles.statValue}>{formatCurrency(campaign.goal_amount)}</Text>
+              <Text style={styles.statValue}>{formatCurrency(campaignData.goal_amount)}</Text>
             </View>
             <View style={styles.statItem}>
               <Text style={styles.statLabel}>Lượt ủng hộ:</Text>
-              <Text style={styles.statValue}>{campaign.supporters_count || 0}</Text>
+              <Text style={styles.statValue}>{campaignData.supporters_count || 0}</Text>
             </View>
             <View style={styles.statItem}>
               <Text style={styles.statLabel}>Còn lại:</Text>
@@ -291,11 +311,11 @@ const CampaignDetailScreen = ({ route }) => {
           {/* Description */}
           <View style={styles.descriptionSection}>
             <Text style={styles.sectionTitle}>Thông tin chi tiết</Text>
-            <Text style={styles.description}>{campaign.description}</Text>
+            <Text style={styles.description}>{campaignData.description}</Text>
 
             <Text style={styles.sectionTitle}>Thời gian chiến dịch</Text>
             <Text style={styles.campaignTime}>
-              Từ {formatDate(campaign.start_date)} đến {formatDate(campaign.end_date)}
+              Từ {formatDate(campaignData.start_date)} đến {formatDate(campaignData.end_date)}
             </Text>
           </View>
 
@@ -328,9 +348,9 @@ const CampaignDetailScreen = ({ route }) => {
 
       {/* Bottom Action Buttons */}
       <View style={styles.bottomActions}>
-        <TouchableOpacity style={styles.shareButton} onPress={handleShare}>
-          <Text style={styles.shareButtonText}>Chia sẻ</Text>
-        </TouchableOpacity>
+     <TouchableOpacity style={styles.shareButton} onPress={handleShare}>
+  <Text style={styles.shareButtonText}>📋 Sao chép link</Text>
+</TouchableOpacity>
         <TouchableOpacity style={styles.donateButton} onPress={handleDonate}>
           <Text style={styles.donateButtonText}>Quyên góp ngay 💝</Text>
         </TouchableOpacity>
@@ -390,6 +410,9 @@ const CampaignDetailScreen = ({ route }) => {
                   Quý vị vui lòng chọn chuyển tiền ở chế độ thường.
                 </Text>
               </View>
+              <Text style={{ color: '#2980b9', marginTop: 10 }} selectable>
+  https://caplayeuthuong.vn/campaign/{campaignData._id}
+</Text>
 
               {/* Content Options */}
               <View style={styles.contentSection}>
@@ -738,6 +761,7 @@ const styles = StyleSheet.create({
     borderRadius: 8,
     alignItems: 'center',
   },
+
   donateButtonText: {
     color: '#fff',
     fontSize: 16,
