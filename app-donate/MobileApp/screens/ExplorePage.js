@@ -20,6 +20,12 @@ const ExplorePage = ({ navigation }) => {
   const [recentTransactions, setRecentTransactions] = useState([]);
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
+  const [debouncedSearch, setDebouncedSearch] = useState('');
+  
+  // AI States - Optimized
+  const [aiSuggestion, setAiSuggestion] = useState('');
+  const [showAiPanel, setShowAiPanel] = useState(false);
+  const [aiLoading, setAiLoading] = useState(false);
 
   const processCampaignsData = (campaigns) => {
     return campaigns.map(campaign => {
@@ -36,6 +42,45 @@ const ExplorePage = ({ navigation }) => {
         image: campaign.image || 'https://via.placeholder.com/300x200',
       };
     });
+  };
+useEffect(() => {
+  const timeout = setTimeout(() => {
+    setDebouncedSearch(search);
+  }, 500); // 500ms delay sau khi ngưng gõ
+
+  return () => clearTimeout(timeout); // clear nếu người dùng gõ tiếp
+}, [search]);
+
+  // AI Function - Optimized
+  const fetchAiSuggestion = async () => {
+    if (!search.trim()) {
+      Alert.alert('Thông báo', 'Vui lòng nhập từ khóa tìm kiếm');
+      return;
+    }
+
+    setAiLoading(true);
+    try {
+      const res = await fetch(`${API_BASE_URL}/genmini`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ 
+          prompt: `Gợi ý 3 chiến dịch từ thiện phù hợp với: ${search}. Trả lời ngắn gọn dưới 100 từ.` 
+        }),
+      });
+
+      const data = await res.json();
+      if (data.result) {
+        setAiSuggestion(data.result);
+        setShowAiPanel(true);
+      } else {
+        Alert.alert('Lỗi', 'Không có phản hồi từ AI');
+      }
+    } catch (err) {
+      console.error('Lỗi gọi AI:', err);
+      Alert.alert('Lỗi', 'Không thể kết nối AI');
+    } finally {
+      setAiLoading(false);
+    }
   };
 
   const processOrganizationsData = (organizationsResponse) => {
@@ -84,11 +129,19 @@ const ExplorePage = ({ navigation }) => {
       const campaignsData = await campaignsResponse.json();
       let campaigns = Array.isArray(campaignsData) ? campaignsData : [];
 
+    if (debouncedSearch) {
+  const keyword = debouncedSearch.toLowerCase();
+  campaigns = campaigns.filter(c =>
+    c?.title?.toLowerCase()?.includes(keyword) ||
+    c?.description?.toLowerCase()?.includes(keyword)
+  );
+}
       if (search) {
         campaigns = campaigns.filter(c =>
           c.title.toLowerCase().includes(search.toLowerCase()) ||
           c.description.toLowerCase().includes(search.toLowerCase())
         );
+
       }
       if (location) {
         campaigns = campaigns.filter(c =>
@@ -127,9 +180,10 @@ const ExplorePage = ({ navigation }) => {
     }
   };
 
-  useEffect(() => {
-    fetchExploreData();
-  }, [search, location, category]);
+ useEffect(() => {
+  fetchExploreData();
+}, [debouncedSearch, location, category]);
+
 
   const onRefresh = () => {
     setRefreshing(true);
@@ -219,7 +273,20 @@ const ExplorePage = ({ navigation }) => {
             value={search}
             onChangeText={setSearch}
           />
+          {/* AI Button - Optimized */}
+          <TouchableOpacity 
+            style={styles.aiButton}
+            onPress={fetchAiSuggestion}
+            disabled={aiLoading}
+          >
+            {aiLoading ? (
+              <ActivityIndicator size="small" color="#fff" />
+            ) : (
+              <Text style={styles.aiButtonText}>✨ AI</Text>
+            )}
+          </TouchableOpacity>
         </View>
+        
         <View style={styles.filterRow}>
           <TextInput
             style={styles.filterInput}
@@ -235,6 +302,31 @@ const ExplorePage = ({ navigation }) => {
           />
         </View>
       </View>
+
+      {/* AI Suggestion Panel - Optimized */}
+      {showAiPanel && aiSuggestion && (
+        <View style={styles.aiPanel}>
+          <View style={styles.aiHeader}>
+            <Text style={styles.aiTitle}>🤖 Gợi ý AI</Text>
+            <TouchableOpacity 
+              style={styles.closeButton}
+              onPress={() => setShowAiPanel(false)}
+            >
+              <Text style={styles.closeButtonText}>✕</Text>
+            </TouchableOpacity>
+          </View>
+          <Text style={styles.aiSuggestionText}>{aiSuggestion}</Text>
+          <TouchableOpacity 
+            style={styles.applyButton}
+            onPress={() => {
+              setSearch(aiSuggestion.split(' ').slice(0, 3).join(' '));
+              setShowAiPanel(false);
+            }}
+          >
+            <Text style={styles.applyButtonText}>🔍 Áp dụng gợi ý</Text>
+          </TouchableOpacity>
+        </View>
+      )}
 
       <View style={styles.section}>
         <Text style={styles.sectionTitle}>🔥 Chiến dịch nổi bật</Text>
@@ -298,6 +390,77 @@ const styles = StyleSheet.create({
   },
   searchIcon: { fontSize: 16, marginRight: 8 },
   searchInput: { flex: 1, height: 40 },
+  
+  // AI Button Styles
+  aiButton: {
+    backgroundColor: '#4CAF50',
+    paddingHorizontal: 12,
+    paddingVertical: 8,
+    borderRadius: 6,
+    marginLeft: 8,
+    minWidth: 50,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  aiButtonText: {
+    color: '#fff',
+    fontSize: 12,
+    fontWeight: 'bold',
+  },
+  
+  // AI Panel Styles
+  aiPanel: {
+    backgroundColor: '#f8f9fa',
+    margin: 16,
+    borderRadius: 12,
+    padding: 16,
+    borderLeftWidth: 4,
+    borderLeftColor: '#4CAF50',
+    elevation: 2,
+  },
+  aiHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: 12,
+  },
+  aiTitle: {
+    fontSize: 16,
+    fontWeight: 'bold',
+    color: '#2e7d32',
+  },
+  closeButton: {
+    backgroundColor: '#e0e0e0',
+    width: 24,
+    height: 24,
+    borderRadius: 12,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  closeButtonText: {
+    fontSize: 14,
+    color: '#666',
+    fontWeight: 'bold',
+  },
+  aiSuggestionText: {
+    fontSize: 14,
+    color: '#333',
+    lineHeight: 20,
+    marginBottom: 12,
+  },
+  applyButton: {
+    backgroundColor: '#4CAF50',
+    paddingHorizontal: 16,
+    paddingVertical: 8,
+    borderRadius: 8,
+    alignItems: 'center',
+  },
+  applyButtonText: {
+    color: '#fff',
+    fontSize: 14,
+    fontWeight: 'bold',
+  },
+  
   filterRow: { flexDirection: 'row', gap: 12, marginTop: 10 },
   filterInput: {
     flex: 1, backgroundColor: '#eee', borderRadius: 8, paddingHorizontal: 10, height: 40,

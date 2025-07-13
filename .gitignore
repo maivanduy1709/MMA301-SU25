@@ -1,5 +1,46 @@
-
+# Node.js
 node_modules/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+.env
+.env.*    # e.g., .env.local, .env.dev
+
+# React Native
 android/
 ios/
+*.iml
+.gradle/
+.idea/
+build/
+*.keystore
+*.jks
+
+# VSCode
 .vscode/
+
+# Logs
+logs
+*.log
+*.log.*
+
+# Metro / Cache
+.expo/
+.expo-shared/
+dist/
+.cache/
+tmp/
+temp/
+babel-cache/
+*.tmp
+
+# Watchman
+.watchmanconfig
+
+# MacOS
+.DS_Store
+
+# Git
+*.swp
+*.swo
+*.orig

@@ -15,6 +15,7 @@
     "argparse": "^1.0.10",
     "asap": "^2.0.6",
     "async-limiter": "^1.0.1",
+    "axios": "^1.10.0",
     "babel-jest": "^29.7.0",
     "babel-plugin-istanbul": "^6.1.1",
     "babel-plugin-jest-hoist": "^29.6.3",
@@ -289,10 +290,9 @@
     "yargs": "^17.7.2",
     "yargs-parser": "^21.1.1"
   },
-  "devDependencies": {},
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
-     "start": "node index.js"
+    "start": "nodemon index.js"
   },
   "keywords": [],
   "author": "",
