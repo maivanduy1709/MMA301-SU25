@@ -17,6 +17,7 @@ const ExplorePage = ({ navigation }) => {
   const [category, setCategory] = useState('');
   const [trendingCampaigns, setTrendingCampaigns] = useState([]);
   const [topOrganizations, setTopOrganizations] = useState([]);
+  const [recentTransactions, setRecentTransactions] = useState([]);
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
 
@@ -52,13 +53,31 @@ const ExplorePage = ({ navigation }) => {
     }));
   };
 
+  const processTransactionsData = (transactionsResponse) => {
+    const transactions = transactionsResponse.data || [];
+    return transactions.slice(0, 10).map(transaction => {
+      const raw = transaction.raw || {};
+      return {
+        _id: transaction._id,
+        amount: raw.transferAmount || raw.amount || 0,
+        gateway: raw.gateway || 'N/A',
+        referenceCode: raw.referenceCode || 'N/A',
+        content: raw.content || raw.message || 'Không có nội dung',
+        transactionDate: raw.transactionDate || transaction.time || 'N/A',
+        description: raw.description || 'Giao dịch thành công',
+        type: transaction.type || 'Tiền vào',
+      };
+    });
+  };
+
   const fetchExploreData = async () => {
     try {
       setLoading(true);
 
-      const [campaignsResponse, organizationsResponse] = await Promise.all([
+      const [campaignsResponse, organizationsResponse, transactionsResponse] = await Promise.all([
         fetch(`${API_BASE_URL}/campaigns`),
-        fetch(`${API_BASE_URL}/organizations`)
+        fetch(`${API_BASE_URL}/organizations`),
+        fetch(`${API_BASE_URL}/transactions`)
       ]);
 
       if (!campaignsResponse.ok) throw new Error('Lỗi tải chiến dịch');
@@ -91,6 +110,13 @@ const ExplorePage = ({ navigation }) => {
           .filter(org => org.is_active)
           .sort((a, b) => b.total_raised - a.total_raised);
         setTopOrganizations(sortedOrganizations);
+      }
+
+      if (transactionsResponse.ok) {
+        const transactionsData = await transactionsResponse.json();
+        if (transactionsData.success) {
+          setRecentTransactions(processTransactionsData(transactionsData));
+        }
       }
     } catch (error) {
       console.error('Lỗi khi tải dữ liệu:', error);
@@ -143,6 +169,31 @@ const ExplorePage = ({ navigation }) => {
       </Text>
     </TouchableOpacity>
   );
+
+  const renderTransaction = ({ item }) => (
+    <View style={styles.transactionCard}>
+      <View style={styles.transactionHeader}>
+        <Text style={styles.transactionAmount}>
+          💰 {item.amount.toLocaleString('vi-VN')} VNĐ
+        </Text>
+        <Text style={styles.transactionType}>{item.type}</Text>
+      </View>
+      <View style={styles.transactionDetails}>
+        <Text style={styles.transactionDetail}>🏦 {item.gateway}</Text>
+        <Text style={styles.transactionDetail}>📄 {item.referenceCode}</Text>
+      </View>
+      <Text style={styles.transactionContent} numberOfLines={2}>
+        📝 {item.content}
+      </Text>
+      <Text style={styles.transactionTime}>
+        🕒 {typeof item.transactionDate === 'string' ? item.transactionDate : new Date(item.transactionDate).toLocaleString('vi-VN')}
+      </Text>
+    </View>
+  );
+
+  const navigateToTransactionHistory = () => {
+    navigation.navigate('TransactionHistory');
+  };
 
   if (loading && !refreshing) {
     return (
@@ -212,6 +263,25 @@ const ExplorePage = ({ navigation }) => {
           />
         ) : <Text style={styles.noDataText}>Không có tổ chức nào</Text>}
       </View>
+
+      <View style={styles.section}>
+        <View style={styles.sectionHeader}>
+          <Text style={styles.sectionTitle}>💳 Giao dịch minh bạch</Text>
+          <TouchableOpacity onPress={navigateToTransactionHistory}>
+            <Text style={styles.viewAllText}>Xem tất cả →</Text>
+          </TouchableOpacity>
+        </View>
+        {recentTransactions.length > 0 ? (
+          <FlatList
+            data={recentTransactions}
+            keyExtractor={item => item._id}
+            renderItem={renderTransaction}
+            horizontal
+            showsHorizontalScrollIndicator={false}
+            contentContainerStyle={styles.horizontalList}
+          />
+        ) : <Text style={styles.noDataText}>Không có giao dịch nào</Text>}
+      </View>
     </ScrollView>
   );
 };
@@ -233,7 +303,16 @@ const styles = StyleSheet.create({
     flex: 1, backgroundColor: '#eee', borderRadius: 8, paddingHorizontal: 10, height: 40,
   },
   section: { marginTop: 16 },
+  sectionHeader: { 
+    flexDirection: 'row', 
+    justifyContent: 'space-between', 
+    alignItems: 'center', 
+    marginLeft: 16, 
+    marginRight: 16, 
+    marginBottom: 10 
+  },
   sectionTitle: { fontSize: 18, fontWeight: 'bold', marginLeft: 16, marginBottom: 10 },
+  viewAllText: { color: '#4CAF50', fontSize: 14, fontWeight: '600' },
   horizontalList: { paddingLeft: 16 },
   noDataText: { textAlign: 'center', color: '#666', fontStyle: 'italic', marginVertical: 20 },
 
@@ -260,6 +339,18 @@ const styles = StyleSheet.create({
   organizationName: { fontSize: 14, fontWeight: 'bold', textAlign: 'center', marginBottom: 4 },
   organizationStats: { fontSize: 12, color: '#666', marginBottom: 4 },
   organizationAmount: { fontSize: 12, fontWeight: 'bold', color: '#4CAF50' },
+
+  transactionCard: {
+    backgroundColor: '#fff', borderRadius: 12, padding: 12, marginRight: 16,
+    width: width * 0.8, elevation: 2,
+  },
+  transactionHeader: { flexDirection: 'row', justifyContent: 'space-between', marginBottom: 8 },
+  transactionAmount: { fontSize: 16, fontWeight: 'bold', color: '#4CAF50' },
+  transactionType: { fontSize: 12, color: '#666', backgroundColor: '#e8f5e8', paddingHorizontal: 8, paddingVertical: 2, borderRadius: 4 },
+  transactionDetails: { flexDirection: 'row', justifyContent: 'space-between', marginBottom: 4 },
+  transactionDetail: { fontSize: 12, color: '#666' },
+  transactionContent: { fontSize: 12, color: '#333', marginBottom: 4 },
+  transactionTime: { fontSize: 11, color: '#999' },
 });
 
 export default ExplorePage;

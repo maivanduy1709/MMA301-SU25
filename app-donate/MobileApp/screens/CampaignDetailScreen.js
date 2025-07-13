@@ -131,32 +131,30 @@ const CampaignDetailScreen = ({ route }) => {
       return 'Ung ho CLYT';
     }
   };
+  const removeVietnameseTones = (str) => {
+  return str.normalize('NFD')
+    .replace(/[\u0300-\u036f]/g, '')  // Remove accents
+    .replace(/đ/g, 'd').replace(/Đ/g, 'D')  // Replace đ
+    .replace(/[^a-zA-Z0-9\s]/g, '')  // Remove symbols
+    .trim();
+};
+
 
   // Hàm generateQRUrl được sửa lại
   const generateQRUrl = (desContent) => {
-    const acc = '686829078888';
-    const bank = 'MBBank';
-    
-    // Đảm bảo desContent không null/undefined
-    let content = desContent || 'Ung ho CLYT';
-    
-    // Chỉ loại bỏ các ký tự có thể gây lỗi URL, giữ lại dấu tiếng Việt
-    content = content.replace(/[<>\"'&]/g, '').trim();
-    
-    // Giới hạn độ dài để tránh URL quá dài
-    if (content.length > 50) {
-      content = content.substring(0, 50);
-    }
-    
-    // Encode URL đúng cách cho tiếng Việt
-    const encodedDes = encodeURIComponent(content);
-    const qrUrl = `https://qr.sepay.vn/img?acc=${acc}&bank=${bank}&des=${encodedDes}&template=compact&download=false`;
-    
-    console.log('🔗 QR URL:', qrUrl);
-    console.log('📝 Content:', content);
-    
-    return qrUrl;
-  };
+  const acc = '686829078888';
+  const bank = 'MBBank';
+  let content = desContent || 'Ung ho CLYT';
+
+  // 💥 Xử lý đúng theo yêu cầu SePay
+  content = removeVietnameseTones(content);
+  content = content.replace(/[<>\"'&]/g, '').trim();
+  if (content.length > 50) content = content.substring(0, 50);
+
+  const encodedDes = encodeURIComponent(content);
+  return `https://qr.sepay.vn/img?acc=${acc}&bank=${bank}&des=${encodedDes}&template=compact&download=false`;
+};
+
 const loadQrAsBase64 = async () => {
   try {
     setQrLoading(true);
@@ -238,6 +236,7 @@ const loadQrAsBase64 = async () => {
       setIsGeneratingQR(false);
       setQrLoading(true);
       setQrError(false);
+      loadQrAsBase64();
       
       // Sao chép donation ID vào clipboard
       Clipboard.setString(newId);
@@ -570,20 +569,24 @@ const loadQrAsBase64 = async () => {
             <Text style={styles.qrTitle}>Quét mã QR để ủng hộ</Text>
             
             <View style={styles.qrImageContainer}>
-              <Image
-                source={{ uri: generateQRUrl(getBankContent()) }}
-                style={styles.qrImage}
-                resizeMode="contain"
-                onLoadStart={() => setQrLoading(true)}
-                onLoad={() => {
-                  setQrLoading(false);
-                  setQrError(false);
-                }}
-                onError={() => {
-                  setQrLoading(false);
-                  setQrError(true);
-                }}
-              />
+           {qrBase64 ? (
+  <Image
+    source={{ uri: qrBase64 }}
+    style={styles.qrImage}
+    resizeMode="contain"
+    onLoadStart={() => setQrLoading(true)}
+    onLoadEnd={() => setQrLoading(false)}
+    onError={() => {
+      setQrError(true);
+      setQrLoading(false);
+      Alert.alert('⚠️ Không thể hiển thị QR', 'Ảnh QR gặp lỗi. Vui lòng thử lại.');
+    }}
+  />
+) : (
+  <ActivityIndicator size="large" color="#e74c3c" />
+)}
+
+
               
               {qrLoading && (
                 <View style={styles.qrLoadingOverlay}>
