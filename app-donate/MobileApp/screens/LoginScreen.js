@@ -180,7 +180,7 @@ export default function LoginScreen({ navigation }) {
             </TouchableOpacity>
 
             {/* Social Login */}
-            <View style={styles.socialContainer}>
+            {/* <View style={styles.socialContainer}>
               <View style={styles.dividerContainer}>
                 <View style={styles.divider} />
                 <Text style={styles.dividerText}>Hoặc đăng nhập bằng</Text>
@@ -204,7 +204,7 @@ export default function LoginScreen({ navigation }) {
                   <Text style={styles.socialButtonLabel}>Facebook</Text>
                 </TouchableOpacity>
               </View>
-            </View>
+            </View> */}
 
             {/* Register Link */}
             <View style={styles.registerContainer}>

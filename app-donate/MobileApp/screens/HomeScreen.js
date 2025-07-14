@@ -1178,7 +1178,7 @@ const styles = StyleSheet.create({
   activeTabLabel: {
     color: '#FF6B6B',
     fontWeight: '600',
-  },
+  },R
 });
 
 export default CharityHomepage;

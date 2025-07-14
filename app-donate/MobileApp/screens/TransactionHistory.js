@@ -29,7 +29,15 @@ const TransactionHistory = ({ navigation }) => {
       const result = await response.json();
 
       if (result.success) {
-        setTransactions(result.data || []);
+       // Sắp xếp theo thời gian giảm dần (mới nhất trước)
+const sortedData = (result.data || []).sort((a, b) => {
+  const timeA = new Date(a.raw?.transactionDate || a.time || 0).getTime();
+  const timeB = new Date(b.raw?.transactionDate || b.time || 0).getTime();
+  return timeB - timeA;
+});
+
+setTransactions(sortedData);
+
         
         // Tính tổng số tiền
         const total = (result.data || []).reduce((sum, transaction) => {
@@ -52,6 +60,15 @@ const TransactionHistory = ({ navigation }) => {
   useEffect(() => {
     fetchTransactions();
   }, []);
+  useEffect(() => {
+  const interval = setInterval(() => {
+    console.log('🔄 Đang tự động cập nhật giao dịch...');
+    fetchTransactions();
+  }, 300000); // 5 phút = 300.000 ms
+
+  return () => clearInterval(interval); // Dọn dẹp khi unmount
+}, []);
+
 
   const onRefresh = () => {
     setRefreshing(true);
@@ -87,8 +104,10 @@ const TransactionHistory = ({ navigation }) => {
   );
 
   const renderSummary = () => (
+    
     <View style={styles.summaryCard}>
       <Text style={styles.summaryTitle}>📊 Tổng quan</Text>
+      
       <View style={styles.summaryRow}>
         <Text style={styles.summaryLabel}>Tổng số giao dịch:</Text>
         <Text style={styles.summaryValue}>{transactions.length}</Text>
@@ -112,6 +131,10 @@ const TransactionHistory = ({ navigation }) => {
     return (
       <View style={styles.card}>
         <View style={styles.cardHeader}>
+          <Text style={{ textAlign: 'center', fontSize: 12, color: '#999', marginBottom: 10 }}>
+  Giao dịch được cập nhật tự động mỗi 5 phút
+</Text>
+
           <Text style={styles.transactionNumber}>#{index + 1}</Text>
           <Text style={styles.transactionType}>{item.type || 'Tiền vào'}</Text>
         </View>
