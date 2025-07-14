@@ -1,14 +1,20 @@
-// routes/initDonation.js
 const express = require('express');
 const router = express.Router();
 const DonationInit = require('../model/DonationInit');
-const Transaction = require('../model/Transaction'); // import model
+const Transaction = require('../model/Transaction');
 
+// Hàm trích mã donationId bắt đầu bằng don/DON
+function extractDonationId(text) {
+  const match = text?.match(/don[a-zA-Z0-9]+/i);
+  return match ? match[0] : null;
+}
+
+// --- INITIATE DONATION ---
 router.post('/initiate-donation', async (req, res) => {
   const { donationId, campaignId, amount, createdAt } = req.body;
-   console.log("📥 Đã nhận request initiate-donation:", req.body);
+  console.log("📥 Đã nhận request initiate-donation:", req.body);
 
-  if (!donationId || !campaignId ) {
+  if (!donationId || !campaignId) {
     return res.status(400).json({ error: 'Thiếu thông tin bắt buộc' });
   }
 
@@ -23,6 +29,7 @@ router.post('/initiate-donation', async (req, res) => {
       campaignId,
       amount,
       createdAt: createdAt || new Date(),
+      status: 'pending'
     });
 
     await newDonation.save();
@@ -33,7 +40,7 @@ router.post('/initiate-donation', async (req, res) => {
   }
 });
 
-
+// --- CHECK DONATION STATUS ---
 router.get('/check-donation/:donationId', async (req, res) => {
   const { donationId } = req.params;
   console.log("🔍 Kiểm tra donation thực:", donationId);
@@ -43,12 +50,24 @@ router.get('/check-donation/:donationId', async (req, res) => {
   }
 
   try {
-    // Bước 1: Tìm trong bảng transaction xem có ai chuyển khoản với nội dung trùng donationId không
+    const donationRegex = new RegExp(donationId, 'i');
+
     const matchedTransaction = await Transaction.findOne({
-      'raw.description': { $regex: new RegExp(donationId, 'i') }
+      $or: [
+        { description: { $regex: donationRegex } },
+        { content: { $regex: donationRegex } },
+        { 'raw.description': { $regex: donationRegex } },
+        { 'raw.content': { $regex: donationRegex } }
+      ]
     });
 
     if (matchedTransaction) {
+      // Nếu tìm thấy thì cập nhật luôn DonationInit thành confirmed
+      await DonationInit.updateOne(
+        { donationId: { $regex: donationRegex } },
+        { $set: { status: 'confirmed', confirmedAt: new Date() } }
+      );
+
       return res.json({ status: 'confirmed' });
     }
 
@@ -59,5 +78,32 @@ router.get('/check-donation/:donationId', async (req, res) => {
   }
 });
 
+// --- XỬ LÝ GIAO DỊCH WEBHOOK TỪ NGÂN HÀNG ---
+router.post('/webhook', async (req, res) => {
+  const data = req.body;
+  console.log('📩 Nhận Webhook:', data);
+
+  const descriptionText = data.description || data.content || '';
+  const donationId = extractDonationId(descriptionText);
+
+  try {
+    const newTx = new Transaction(data);
+    await newTx.save();
+
+    if (donationId) {
+      await DonationInit.updateOne(
+        { donationId: { $regex: new RegExp(donationId, 'i') } },
+        { $set: { status: 'confirmed', confirmedAt: new Date() } }
+      );
+
+      console.log(`✅ Đã xác nhận donationId: ${donationId}`);
+    }
+
+    res.status(200).json({ message: 'Đã nhận và lưu giao dịch' });
+  } catch (err) {
+    console.error('❌ Lỗi lưu webhook hoặc cập nhật donation:', err);
+    res.status(500).json({ message: 'Lỗi xử lý webhook' });
+  }
+});
 
 module.exports = router;

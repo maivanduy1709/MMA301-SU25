@@ -25,6 +25,7 @@ const DonationScreen = ({ route }) => {
   const [qrLoading, setQrLoading] = useState(false);
   const [qrError, setQrError] = useState(false);
   const [showQRSection, setShowQRSection] = useState(false);
+  const [hasThanked, setHasThanked] = useState(false);
 
   const API_BASE_URL = 'http://10.0.2.2:3001/api';
 
@@ -63,15 +64,15 @@ const DonationScreen = ({ route }) => {
 
 
 
-  const createDonationId = () => {
-    try {
-      return uuidv4();
-    } catch (error) {
-      const timestamp = Date.now().toString();
-      const random = Math.random().toString(36).substr(2, 9);
-      return `DON_${timestamp}_${random}`;
-    }
-  };
+ const createDonationId = () => {
+  try {
+    return 'DON' + Date.now().toString() + Math.random().toString(36).substring(2, 10);
+  } catch (error) {
+    const fallback = 'DON' + Date.now().toString() + Math.random().toString(36).substr(2, 9);
+    return fallback;
+  }
+};
+
 
   const handleGenerateQR = async () => {
     setIsGeneratingQR(true);
@@ -178,6 +179,40 @@ const DonationScreen = ({ route }) => {
 
   autoInitDonation();
 }, [campaign?._id]); // thêm dependency chính xác để đảm bảo cập nhật đúng chiến dịch
+useEffect(() => {
+  let interval = null;
+
+  if (donationId) {
+    interval = setInterval(async () => {
+      try {
+        const res = await fetch(`${API_BASE_URL}/check-donation/${donationId}`);
+        if (!res.ok) return;
+
+        const data = await res.json();
+        console.log("📡 Polling donation status:", data);
+
+        if (data.status === 'confirmed' && !hasThanked) {
+          setHasThanked(true); // để không alert lặp
+          clearInterval(interval);
+          Alert.alert(
+            '🎉 Cảm ơn bạn',
+            'Thông tin chuyển khoản đã được xác nhận. Cặp lá yêu thương xin trân trọng cảm ơn bạn!',
+            [
+              { text: 'Quay lại', onPress: () => navigation.goBack() },
+              { text: 'Ở lại', style: 'cancel' },
+            ]
+          );
+        }
+      } catch (error) {
+        console.log('Polling error:', error);
+      }
+    }, 3000); // kiểm tra mỗi 3 giây
+  }
+
+  return () => {
+    if (interval) clearInterval(interval);
+  };
+}, [donationId, hasThanked]);
 
 
   return (
