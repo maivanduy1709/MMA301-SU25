@@ -34,6 +34,7 @@ const organizationRoutes = require('./routes/organizations');
 const feedRoutes = require('./routes/feed');
 const exploreRoute = require('./routes/explore');
 const genminiRoute = require('./routes/genmini');
+const initDonationRoute = require('./routes/initDonation');
 
 // Sử dụng routes
 server.use("/api/auth", authRoute);
@@ -52,6 +53,9 @@ server.use('/api/organizations', organizationRoutes);
 server.use('/api/feed', feedRoutes);
 server.use('/api/explore', exploreRoute);
 server.use('/api/genmini', genminiRoute);
+server.use('/api', initDonationRoute);
+
+
 
 // Mặc định root
 server.get("/", (req, res) => {

@@ -35,7 +35,6 @@ router.post('/', async (req, res) => {
     } catch (err) {
       // Nếu lỗi 429 → chuyển sang gemini-1.5-flash
       if (err.response?.status === 429) {
-        console.warn('⚠️ Quá tải gemini-1.5-pro, thử lại với gemini-1.5-flash...');
         result = await callGemini('gemini-1.5-flash', prompt);
       } else {
         throw err; // Nếu lỗi khác thì không fallback

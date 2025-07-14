@@ -14,6 +14,7 @@ import {
 } from 'react-native';
 import axios from 'axios';
 import { useNavigation } from '@react-navigation/native';
+import CampaignCardSimple from './CampaignCardSimple'; // Import component CampaignCardSimple
 
 const { width, height } = Dimensions.get('window');
 
@@ -687,17 +688,16 @@ const updatedStyles = StyleSheet.create({
         <ConnectionNetwork />
 
         {/* Campaigns */}
-        <View style={styles.campaignsSection}>
-          <View style={styles.sectionHeader}>
-            <Text style={styles.sectionTitle}>Chiến dịch nổi bật</Text>
-            <TouchableOpacity>
-              <Text style={styles.seeAllText}>Xem tất cả ›</Text>
-            </TouchableOpacity>
-          </View>
-          {campaigns.slice(0, 5).map((campaign, index) => (
-            <CampaignCard key={generateSafeKey('campaign', campaign, index)} campaign={campaign} />
-          ))}
-        </View>
+      <View style={styles.campaignsSection}>
+  <Text style={styles.sectionTitle}>Chiến dịch nổi bật</Text>
+  {campaigns.map((campaign, index) => (
+    <CampaignCardSimple
+      key={`campaign-${campaign._id || index}`}
+      campaign={campaign}
+    />
+  ))}
+</View>
+
 
         {/* Events */}
         {events.length > 0 && (

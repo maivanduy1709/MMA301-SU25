@@ -39,17 +39,36 @@ router.put('/:id', async (req, res) => {
     res.status(400).json({ error: err.message });
   }
 });
-
-// GET single campaign
 router.get('/:id', async (req, res) => {
   try {
-    const campaign = await Campaign.findById(req.params.id);
-    if (!campaign) return res.status(404).json({ error: 'Campaign not found' });
-    res.json(campaign);
+ 
+
+    const campaign = await Campaign.findOne({ _id: req.params.id })
+      .populate('organization_id')
+      .populate('category_id');
+
+    if (!campaign) {
+      return res.status(404).json({ error: 'Không tìm thấy chiến dịch' });
+    }
+
+    res.json({ campaign });
   } catch (err) {
-    res.status(500).json({ error: err.message });
+    res.status(500).json({ error: 'Lỗi khi lấy chi tiết chiến dịch' });
   }
 });
+
+
+
+// GET single campaign
+// router.get('/:id', async (req, res) => {
+//   try {
+//     const campaign = await Campaign.findById(req.params.id);
+//     if (!campaign) return res.status(404).json({ error: 'Campaign not found' });
+//     res.json(campaign);
+//   } catch (err) {
+//     res.status(500).json({ error: err.message });
+//   }
+// });
 
 // POST new campaign
 router.post('/', async (req, res) => {
@@ -112,21 +131,7 @@ router.get('/search', async (req, res) => {
   }
 });
 // GET /api/campaigns/:id
-router.get('/:id', async (req, res) => {
-  try {
-    const campaign = await Campaign.findById(req.params.id)
-      .populate('organization_id')
-      .populate('category_id');
 
-    if (!campaign) {
-      return res.status(404).json({ error: 'Không tìm thấy chiến dịch' });
-    }
-
-    res.json({ campaign });
-  } catch (err) {
-    res.status(500).json({ error: 'Lỗi khi lấy chi tiết chiến dịch' });
-  }
-});
 
 
 

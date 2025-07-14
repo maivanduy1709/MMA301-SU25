@@ -16,6 +16,7 @@ import SupportPage from './screens/SupportPage';
 import NewsFeed from './screens/NewsFeed';
 import ExplorePage from './screens/ExplorePage';
 import TransactionHistory from './screens/TransactionHistory';
+import DonationScreen from './screens/DonationScreen';
 
 
 const Stack = createNativeStackNavigator();
@@ -111,6 +112,8 @@ function MainNavigation() {
         <Stack.Screen name="SupportPage" component={SupportPage} />
           <Stack.Screen name="NewsFeed" component={NewsFeed} />
        <Stack.Screen name="ExplorePage" component={ExplorePage} />
+       <Stack.Screen name="DonationScreen" component={DonationScreen} />
+
 <Stack.Screen 
   name="TransactionHistory" 
   component={TransactionHistory} 
