@@ -142,7 +142,8 @@ export default function WelcomeScreen({ navigation }) {
         {/* Skip Button */}
         <TouchableOpacity 
           style={styles.skipButton}
-          onPress={() => navigation.navigate('Home')}
+         onPress={() => navigation.navigate('MainTabs', { screen: 'Home' })}
+
         >
           <Text style={styles.skipText}>Bỏ qua →</Text>
         </TouchableOpacity>

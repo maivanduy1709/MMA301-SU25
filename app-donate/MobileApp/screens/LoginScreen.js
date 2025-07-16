@@ -1,20 +1,16 @@
 import React, { useState } from 'react';
-import { 
-  View, 
-  Text, 
-  TextInput, 
-  TouchableOpacity, 
-  Alert, 
-  StyleSheet, 
-  Image, 
-  KeyboardAvoidingView, 
-  Platform, 
-  ScrollView,
-  Dimensions,
-  StatusBar
+import {
+  View, Text, TextInput, TouchableOpacity, Alert,
+  StyleSheet, KeyboardAvoidingView, Platform,
+  ScrollView, Dimensions, StatusBar
 } from 'react-native';
 import LinearGradient from 'react-native-linear-gradient';
 import Icon from 'react-native-vector-icons/Ionicons';
+
+import { useAuth } from '../contexts/AuthContext'; // THÊM
+import { login as loginService } from '../services/authService'; // THÊM
+
+
 
 const { width, height } = Dimensions.get('window');
 
@@ -24,38 +20,42 @@ export default function LoginScreen({ navigation }) {
   const [showPassword, setShowPassword] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
 
-  const handleLogin = async () => {
-    if (!email.trim() || !password.trim()) {
-      Alert.alert('⚠️ Thông báo', 'Vui lòng nhập đầy đủ thông tin!');
-      return;
-    }
+  const { login } = useAuth(); // ✅ từ AuthContext
 
-    if (!isValidEmail(email)) {
-      Alert.alert('⚠️ Thông báo', 'Email không hợp lệ!');
-      return;
-    }
+const handleLogin = async () => {
+  if (!email.trim() || !password.trim()) {
+    Alert.alert('⚠️ Thông báo', 'Vui lòng nhập đầy đủ thông tin!');
+    return;
+  }
 
-    setIsLoading(true);
-    
-    try {
-      // Simulate API call
-      await new Promise(resolve => setTimeout(resolve, 1500));
-      
-      // Replace with actual login service
-      // const data = await login(email, password);
-      
-      Alert.alert('✅ Thành công', 'Đăng nhập thành công!');
-      // navigation.navigate('Home');
-      navigation.reset({
-  index: 0,
-  routes: [{ name: 'Home' }],
-});
-    } catch (err) {
-      Alert.alert('❌ Lỗi', err?.response?.data?.message || 'Đăng nhập thất bại!');
-    } finally {
-      setIsLoading(false);
-    }
-  };
+  if (!isValidEmail(email)) {
+    Alert.alert('⚠️ Thông báo', 'Email không hợp lệ!');
+    return;
+  }
+
+  setIsLoading(true);
+
+  try {
+   const userData = await loginService(email, password);
+console.log('👉 USER DATA:', userData); // Thêm dòng này để xem trong Metro log
+if (!userData.user.avatar) {
+  userData.user.avatar = 'https://i.pravatar.cc/300';
+}
+await login(userData.user);
+
+    Alert.alert('✅ Thành công', 'Đăng nhập thành công!');
+    navigation.reset({
+      index: 0,
+      routes: [{ name: 'MainTabs' }],
+    });
+  } catch (err) {
+    const message = err?.response?.data?.message || 'Đăng nhập thất bại!';
+    Alert.alert('❌ Lỗi', message);
+  } finally {
+    setIsLoading(false);
+  }
+};
+
 
   const isValidEmail = (email) => {
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;

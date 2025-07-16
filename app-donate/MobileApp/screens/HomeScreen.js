@@ -740,7 +740,7 @@ const updatedStyles = StyleSheet.create({
       </ScrollView>
 
       {/* Bottom Navigation */}
-      <View style={styles.bottomNav}>
+      {/* <View style={styles.bottomNav}>
         <TabButton
           icon="❤️"
           label="Trang chủ"
@@ -776,7 +776,7 @@ const updatedStyles = StyleSheet.create({
   }}
           
         />
-      </View>
+      </View> */}
     </SafeAreaView>
   );
 };
@@ -1178,7 +1178,7 @@ const styles = StyleSheet.create({
   activeTabLabel: {
     color: '#FF6B6B',
     fontWeight: '600',
-  },R
+  },
 });
 
 export default CharityHomepage;
