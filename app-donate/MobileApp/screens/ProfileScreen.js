@@ -2,15 +2,15 @@ import React from 'react';
 import { View, Text, StyleSheet, Image, TouchableOpacity, SafeAreaView } from 'react-native';
 import { useAuth } from '../contexts/AuthContext'; // Assuming this path is correct
 
-const ProfileScreen = () => {
-  const { user: userContext, logout } = useAuth();
-  const user = userContext?.user;
+const ProfileScreen = ({ navigation }) => {
+ const { user, logout } = useAuth();
+
 
   if (!user) {
     // You might want to show a loading spinner or redirect if user is not available
     return (
       <View style={styles.loadingContainer}>
-        <Text>Loading profile...</Text>
+        <Text>Vui lòng đăng nhập để xem </Text>
       </View>
     );
   }
@@ -49,9 +49,19 @@ const ProfileScreen = () => {
           )}
         </View>
 
-        <TouchableOpacity style={styles.logoutButton} onPress={logout}>
-          <Text style={styles.logoutText}>Đăng xuất</Text>
-        </TouchableOpacity>
+        <TouchableOpacity
+  style={styles.logoutButton}
+  onPress={async () => {
+    await logout();
+    navigation.reset({
+      index: 0,
+      routes: [{ name: 'Welcome' }], // hoặc 'Login' hoặc 'Home'
+    });
+  }}
+>
+  <Text style={styles.logoutText}>Đăng xuất</Text>
+</TouchableOpacity>
+
       </View>
     </SafeAreaView>
   );

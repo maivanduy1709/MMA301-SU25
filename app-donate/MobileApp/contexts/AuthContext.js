@@ -1,13 +1,12 @@
-// contexts/AuthContext.js
-import React, { createContext, useContext, useState, useEffect } from 'react';
+import React, { createContext, useContext, useEffect, useState } from 'react';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 
-const AuthContext = createContext(undefined);
+const AuthContext = createContext();
 
 export const AuthProvider = ({ children }) => {
   const [user, setUser] = useState(null);
-  const [loading, setLoading] = useState(true); // để xử lý khi đang load user
 
+  // Load user from AsyncStorage when app starts
   useEffect(() => {
     const loadUser = async () => {
       try {
@@ -16,15 +15,14 @@ export const AuthProvider = ({ children }) => {
           setUser(JSON.parse(storedUser));
         }
       } catch (e) {
-        console.error('Failed to load user from storage', e);
-      } finally {
-        setLoading(false);
+        console.log('Failed to load user:', e);
       }
     };
+
     loadUser();
   }, []);
 
-  const login = async userData => {
+  const login = async (userData) => {
     setUser(userData);
     await AsyncStorage.setItem('user', JSON.stringify(userData));
   };
@@ -35,16 +33,10 @@ export const AuthProvider = ({ children }) => {
   };
 
   return (
-    <AuthContext.Provider value={{ user, login, logout, loading }}>
+    <AuthContext.Provider value={{ user, login, logout }}>
       {children}
     </AuthContext.Provider>
   );
 };
 
-export const useAuth = () => {
-  const context = useContext(AuthContext);
-  if (!context) {
-    throw new Error('useAuth must be used within an AuthProvider');
-  }
-  return context;
-};
+export const useAuth = () => useContext(AuthContext);

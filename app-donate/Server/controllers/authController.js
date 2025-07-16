@@ -37,26 +37,31 @@ const Login = async (req, res) => {
 
     const user = await User.findOne({ email });
     if (!user) {
-      return res
-        .status(401)
-        .json({ message: "Email or password is incorrect" });
+      return res.status(401).json({ message: "Email or password is incorrect" });
     }
 
     const isMatch = await bcrypt.compare(password, user.password);
     if (!isMatch) {
-      return res
-        .status(401)
-        .json({ message: "Email or password is incorrect" });
+      return res.status(401).json({ message: "Email or password is incorrect" });
     }
 
-    const { password: pw, ...userData } = user._doc;
-    return res
-      .status(200)
-      .json({ message: "Login successfully", user: userData });
+    // ✅ Trả về đầy đủ các trường cần thiết
+    const userData = {
+      _id: user._id,
+      name: user.name,
+      email: user.email,
+      avatar: user.avatar || 'https://i.pravatar.cc/300',
+      is_verified: user.is_verified,
+      total_donated: user.total_donated,
+      campaigns_supported: user.campaigns_supported
+    };
+
+    return res.status(200).json({ message: "Login successfully", user: userData });
   } catch (error) {
     return res.status(500).json({ message: "Error on server", error });
   }
 };
+
 const forgotPassword = async (req, res) => {
   const { email } = req.body;
 

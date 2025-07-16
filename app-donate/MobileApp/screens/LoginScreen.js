@@ -36,12 +36,18 @@ const handleLogin = async () => {
   setIsLoading(true);
 
   try {
-   const userData = await loginService(email, password);
-console.log('👉 USER DATA:', userData); // Thêm dòng này để xem trong Metro log
-if (!userData.user.avatar) {
-  userData.user.avatar = 'https://i.pravatar.cc/300';
-}
-await login(userData.user);
+    const response = await loginService(email, password);
+    const user = response?.user;
+
+    if (!user || !user.email || !user.name) {
+      throw new Error('Thiếu thông tin người dùng từ server');
+    }
+
+    if (!user.avatar) {
+      user.avatar = 'https://i.pravatar.cc/300';
+    }
+
+    await login(user); // lưu vào AuthContext + AsyncStorage
 
     Alert.alert('✅ Thành công', 'Đăng nhập thành công!');
     navigation.reset({
@@ -49,12 +55,17 @@ await login(userData.user);
       routes: [{ name: 'MainTabs' }],
     });
   } catch (err) {
-    const message = err?.response?.data?.message || 'Đăng nhập thất bại!';
+    const message = err?.response?.data?.message || err.message || 'Đăng nhập thất bại!';
     Alert.alert('❌ Lỗi', message);
   } finally {
     setIsLoading(false);
   }
+  console.log('🔥 User trả về:', JSON.stringify(user, null, 2));
+
 };
+
+
+
 
 
   const isValidEmail = (email) => {
