@@ -19,6 +19,7 @@ import ExplorePage from './screens/ExplorePage';
 import TransactionHistory from './screens/TransactionHistory';
 import DonationScreen from './screens/DonationScreen';
 import BottomTabNavigator from './screens/createBottomTabNavigator';
+import CreateCampaignScreen from './screens/CreateCampaignScreen';
 
 const Stack = createNativeStackNavigator();
 
@@ -67,6 +68,7 @@ function MainNavigation() {
         <Stack.Screen name="ExplorePage" component={ExplorePage} />
         <Stack.Screen name="DonationScreen" component={DonationScreen} />
         <Stack.Screen name="TransactionHistory" component={TransactionHistory} />
+        <Stack.Screen name="CreateCampaignScreen" component={CreateCampaignScreen} />
       </Stack.Navigator>
     </NavigationContainer>
   );

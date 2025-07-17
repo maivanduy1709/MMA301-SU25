@@ -361,14 +361,23 @@ const SupportPage = () => {
       
       {/* Header */}
       <View style={styles.header}>
-        <Text style={styles.headerTitle}>Ủng hộ</Text>
-        <TouchableOpacity 
-          style={styles.filterButton}
-          onPress={() => setShowFilterModal(true)}
-        >
-          <Text style={styles.filterButtonText}>🔍 Lọc</Text>
-        </TouchableOpacity>
-      </View>
+  <Text style={styles.headerTitle}>Ủng hộ</Text>
+  <View style={{ flexDirection: 'row', gap: 8 }}>
+    <TouchableOpacity
+      style={styles.headerButton}
+      onPress={() => navigation.navigate('CreateCampaignScreen')}
+    >
+      <Text style={styles.headerButtonText}>➕ Tạo</Text>
+    </TouchableOpacity>
+    <TouchableOpacity
+      style={styles.headerButton}
+      onPress={() => setShowFilterModal(true)}
+    >
+      <Text style={styles.headerButtonText}>🔍 Lọc</Text>
+    </TouchableOpacity>
+  </View>
+</View>
+
 
       {/* Search Bar */}
       <View style={styles.searchContainer}>

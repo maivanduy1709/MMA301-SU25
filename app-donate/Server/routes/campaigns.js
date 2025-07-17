@@ -105,11 +105,11 @@ router.delete('/:id', async (req, res) => {
 // GET /api/campaigns/search?q=&category=&type=&status=
 router.get('/search', async (req, res) => {
   try {
-    const { q, category, type, status } = req.query;
+    const { q, category, type, status, tag } = req.query;
     const query = {};
 
     if (q) {
-      query.title = { $regex: q, $options: 'i' }; // tìm theo tiêu đề
+      query.title = { $regex: q, $options: 'i' };
     }
 
     if (category) {
@@ -124,15 +124,58 @@ router.get('/search', async (req, res) => {
       query.status = status;
     }
 
+    // 🔍 THÊM phần này để lọc theo tags (chứa 1 tag cụ thể)
+    if (tag) {
+      query.tags = { $in: [tag] }; // tìm các campaign có tag đó
+    }
+
     const campaigns = await Campaign.find(query);
     res.json({ campaigns });
   } catch (err) {
     res.status(500).json({ error: 'Không thể tìm kiếm chiến dịch' });
   }
 });
+
 // GET /api/campaigns/:id
 
+router.post('/', async (req, res) => {
+  try {
+    // Khởi tạo campaign mới từ request body
+    const newCampaign = new Campaign({
+      _id: req.body._id, // nếu không có thì MongoDB sẽ tự tạo
+      title: req.body.title,
+      subtitle: req.body.subtitle,
+      description: req.body.description,
+      type: req.body.type,
+      category_id: req.body.category_id,
+      organization_id: req.body.organization_id,
+      image: req.body.image,
+      banner_image: req.body.banner_image,
+      goal_amount: req.body.goal_amount,
+      current_amount: req.body.current_amount || 0,
+      progress_percentage: req.body.progress_percentage || 0,
+      supporters_count: req.body.supporters_count || 0,
+      days_left: req.body.days_left || 0,
+      location: req.body.location,
+      lat: req.body.lat,
+      lng: req.body.lng,
+      hashtag: req.body.hashtag,
+      start_date: req.body.start_date,
+      end_date: req.body.end_date,
+      status: req.body.status || 'active',
+      tags: req.body.tags || [],
+      created_by: req.body.created_by
+    });
 
+    // Lưu vào cơ sở dữ liệu
+    const saved = await newCampaign.save();
+    res.status(201).json(saved);
+
+  } catch (err) {
+    console.error('Lỗi tạo chiến dịch:', err.message);
+    res.status(400).json({ error: err.message });
+  }
+});
 
 
 module.exports = router;
