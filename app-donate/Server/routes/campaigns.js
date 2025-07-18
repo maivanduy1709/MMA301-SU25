@@ -1,6 +1,7 @@
 const express = require('express');
 const router = express.Router();
 const Campaign = require('../model/Campaign');
+const { v4: uuidv4 } = require('uuid');
 
 // GET all campaigns
 router.get('/', async (req, res) => {
@@ -15,15 +16,21 @@ router.get('/', async (req, res) => {
     res.status(500).json({ error: err.message });
   }
 });
+// ✅ Cách đúng: để MongoDB tự tạo _id
 router.post('/', async (req, res) => {
   try {
-    const newCampaign = new Campaign(req.body); // cần có lat, lng trong body
+    const newCampaign = new Campaign({
+      _id: req.body._id || uuidv4(),  // ✅ sinh tự động nếu client không gửi
+      ...req.body
+    });
     const saved = await newCampaign.save();
     res.status(201).json(saved);
   } catch (err) {
+    console.error('Lỗi tạo chiến dịch:', err.message);
     res.status(400).json({ error: err.message });
   }
 });
+
 
 // PUT cập nhật
 router.put('/:id', async (req, res) => {
@@ -71,15 +78,15 @@ router.get('/:id', async (req, res) => {
 // });
 
 // POST new campaign
-router.post('/', async (req, res) => {
-  try {
-    const newCampaign = new Campaign(req.body);
-    const saved = await newCampaign.save();
-    res.status(201).json(saved);
-  } catch (err) {
-    res.status(400).json({ error: err.message });
-  }
-});
+// router.post('/', async (req, res) => {
+//   try {
+//     const newCampaign = new Campaign(req.body);
+//     const saved = await newCampaign.save();
+//     res.status(201).json(saved);
+//   } catch (err) {
+//     res.status(400).json({ error: err.message });
+//   }
+// });
 
 // PUT update campaign
 router.put('/:id', async (req, res) => {
@@ -138,44 +145,44 @@ router.get('/search', async (req, res) => {
 
 // GET /api/campaigns/:id
 
-router.post('/', async (req, res) => {
-  try {
-    // Khởi tạo campaign mới từ request body
-    const newCampaign = new Campaign({
-      _id: req.body._id, // nếu không có thì MongoDB sẽ tự tạo
-      title: req.body.title,
-      subtitle: req.body.subtitle,
-      description: req.body.description,
-      type: req.body.type,
-      category_id: req.body.category_id,
-      organization_id: req.body.organization_id,
-      image: req.body.image,
-      banner_image: req.body.banner_image,
-      goal_amount: req.body.goal_amount,
-      current_amount: req.body.current_amount || 0,
-      progress_percentage: req.body.progress_percentage || 0,
-      supporters_count: req.body.supporters_count || 0,
-      days_left: req.body.days_left || 0,
-      location: req.body.location,
-      lat: req.body.lat,
-      lng: req.body.lng,
-      hashtag: req.body.hashtag,
-      start_date: req.body.start_date,
-      end_date: req.body.end_date,
-      status: req.body.status || 'active',
-      tags: req.body.tags || [],
-      created_by: req.body.created_by
-    });
+// router.post('/', async (req, res) => {
+//   try {
+//     // Khởi tạo campaign mới từ request body
+//     const newCampaign = new Campaign({
+//       _id: req.body._id, // nếu không có thì MongoDB sẽ tự tạo
+//       title: req.body.title,
+//       subtitle: req.body.subtitle,
+//       description: req.body.description,
+//       type: req.body.type,
+//       category_id: req.body.category_id,
+//       organization_id: req.body.organization_id,
+//       image: req.body.image,
+//       banner_image: req.body.banner_image,
+//       goal_amount: req.body.goal_amount,
+//       current_amount: req.body.current_amount || 0,
+//       progress_percentage: req.body.progress_percentage || 0,
+//       supporters_count: req.body.supporters_count || 0,
+//       days_left: req.body.days_left || 0,
+//       location: req.body.location,
+//       lat: req.body.lat,
+//       lng: req.body.lng,
+//       hashtag: req.body.hashtag,
+//       start_date: req.body.start_date,
+//       end_date: req.body.end_date,
+//       status: req.body.status || 'active',
+//       tags: req.body.tags || [],
+//       created_by: req.body.created_by
+//     });
 
-    // Lưu vào cơ sở dữ liệu
-    const saved = await newCampaign.save();
-    res.status(201).json(saved);
+//     // Lưu vào cơ sở dữ liệu
+//     const saved = await newCampaign.save();
+//     res.status(201).json(saved);
 
-  } catch (err) {
-    console.error('Lỗi tạo chiến dịch:', err.message);
-    res.status(400).json({ error: err.message });
-  }
-});
+//   } catch (err) {
+//     console.error('Lỗi tạo chiến dịch:', err.message);
+//     res.status(400).json({ error: err.message });
+//   }
+// });
 
 
 module.exports = router;

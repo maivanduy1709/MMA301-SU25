@@ -275,6 +275,7 @@
     "unpipe": "^1.0.0",
     "update-browserslist-db": "^1.1.3",
     "utils-merge": "^1.0.1",
+    "uuid": "^11.1.0",
     "vary": "^1.1.2",
     "vlq": "^1.0.1",
     "walker": "^1.0.8",
